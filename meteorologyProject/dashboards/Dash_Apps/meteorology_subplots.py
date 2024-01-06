@@ -91,7 +91,7 @@ def dash_plotly_plot(station, now_string):
     #fig.update_traces(mode="markers", marker=dict(line_color='white', opacity=0.7))
 
     fig.update_layout(title_text=now_string,
-                      font_size = 15, height=700,
+                      font_size = 15, height=700,autotypenumbers='convert types',
     showlegend = True,
     polar = dict(
       bgcolor = "rgb(223, 223, 223)",

@@ -6,6 +6,7 @@ from plotly.offline import plot
 from django.http import HttpResponse
 from django.template import loader
 from .plotly_graphs import *
+from datetime import datetime
 from .Dash_Apps import meteorology_subplots, meteoblue_subplots
 
 # Create your views here.
@@ -13,11 +14,12 @@ def dashboards(request):
 
     template = loader.get_template("index.html")
 
-    #target_plot = plotly_plot('temperature')
-    #target_plot_wind = plotly_plot_wind()
+    now = datetime.now()
+
+    now_string = "Forecast update: " + now.strftime("%Y-%m-%d %H:%M")
 
     context = {
-        'data' : "hola"#target_plot_wind
+        'data' : now_string#target_plot_wind
     } 
     
 
