@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Las Campanas Observatory Weather Page</title>
+    <style>        
+nav {
+    background-color: #333; 
+}
+
+.horizontal-nav {
+    list-style-type: none;
+    display: flex; 
+    justify-content: space-around;
+    padding: 10px 0;
+}
+
+.horizontal-nav li {
+    display: inline;
+}
+
+.horizontal-nav a {
+    text-decoration: none;
+    color: white;
+    padding: 10px 20px;
+    display: inline-block;
+    transition: background-color 0.3s;
+}
+
+.horizontal-nav a:hover {
+    background-color: #555; 
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #333;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    top: 100%; 
+    left: 0;
+}
+
+.dropdown-content li {
+    display: block;
+}
+
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+    </style>
+</head>
+<body>
+    <nav>
+        <ul class="horizontal-nav">
+            <li class="dropdown">
+                <a href="#">Stations</a>
+                <ul class="dropdown-content">
+                    <li><a href="#">Option 1</a></li>
+                    <li><a href="#">Option 2</a></li>
+                    <li><a href="#">Option 3</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Forecast</a></li>
+            <li><a href="#">All Sky Camera</a></li>
+            <li><a href="#">Dust Sensor</a></li>
+            <li><a href="#">Other Resources</a></li>
+        </ul>
+    </nav>
+
+    {% load plotly_dash %}
+
+    <!--The tag below is por displaying vaisala data-->
+    <!--{% plotly_app name="Subplots" ratio=0.45 %}-->
+
+    {% plotly_app name="Subplots" ratio=0.45 %}
+
+     <!--
+        {{wind|safe}}
+    <h1>-----------</h1>
+    {{data|safe}}
+     -->   
+    
+
+
+</body>
+</html>
