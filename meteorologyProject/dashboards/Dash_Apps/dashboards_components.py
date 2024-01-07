@@ -1,15 +1,178 @@
-import dash_core_components as dcc
-import dash_html_components as html
-from dash.dependencies import Input, Output
 import plotly.graph_objs as go
-from django_plotly_dash import DjangoDash
 import pandas as pd
 from plotly.subplots import make_subplots
 from lcodataclient import dataclient
-from datetime import datetime
+from datetime import datetime, timedelta
+
+class VaisalaDashBoard():
+    '''Class for Vaisala Dashboard'''
+    def __init__(self, station) -> None:
+        '''
+        Init instance.
+        :rtype: None
+        '''
+        v = dataclient.VaisalaData.parameters(station = station,
+                                              start_ts = '2024-01-04 14:00:00',                                                                  
+                                              limit = '1440')
+
+        data = dataclient.DataService.get(v)
+
+        self.df = data
+        self.fig = None #This is the plotly figure to display
+
+    def create_subplots(self) -> None:
+        '''
+        Creates a subplot with 3 rows and 2 columns, the 3 rows in the first 
+        column are used to display: Pressure, Wind and Temperature. The 2nd row
+        is for displaying the winddirectionn using a rowspan=3. 
+        :rtype: None
+        '''
+        df = self.df
+        
+        df.sort_index(inplace=True)
+
+        df['time'] = df.index
+
+        df.dropna(subset=['temperature'], inplace=True)
+
+        fig = make_subplots(rows=3, 
+                            cols=2,
+                            shared_xaxes=True,
+                            vertical_spacing=0.02,                    
+                        specs=[[{"type": "xy"}, {"type": "polar", "rowspan": 3}],
+                              [{"type": "xy"}, {"type": "polar"}],
+                              [{"type": "xy"}, {"type": "polar"}]],)
+        
+        
+
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['temperature'], 
+                                 name="Temperature"),
+                                 row=3,
+                                 col=1)
+
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['wind_speed_avg'], 
+                                 name="Wind"),
+                                 row=2, 
+                                 col=1)
+        
+        fig.add_trace(go.Scatter(x=df['time'], y=df['wind_speed_min'], name="WindMin"),
+                row=2, col=1)
+        
+        fig.add_trace(go.Scatter(x=df['time'], y=df['wind_speed_max'], name="WindMax"),
+                row=2, col=1)
+
+        fig.add_trace(go.Scatter(x=df['time'], y=df['air_pressure'], name="Pressure"),
+                row=1, col=1)
+        
+        
+        fig.add_trace(go.Scatterpolargl(
+        r = df.wind_speed_avg,
+        theta = df.wind_dir_avg,
+        name = "Wind AVG",
+        mode = "markers",
+        marker=dict(size=15, color="mediumseagreen")      
+        ),row=1,
+        col=2)
+        
+        fig.add_trace(go.Scatterpolargl(
+        r = df.wind_speed_min,
+        theta = df.wind_dir_min,
+        name = "Wind MIN",
+        mode = "markers",
+        marker=dict(size=20, color="gold", opacity=0.7)      
+        ),row=1,
+        col=2)
+        
+        fig.add_trace(go.Scatterpolargl(
+        r = df.wind_speed_max,
+        theta = df.wind_dir_max,
+        name = "Wind MAX",
+        mode="markers",
+        marker=dict(size=12, color="red", opacity=0.7)      
+        ),row=1,
+        col=2)
+
+
+        fig['layout']['yaxis']['title']='Pressure'
+        fig['layout']['yaxis2']['title']='Wind'
+        fig['layout']['yaxis3']['title']='Temperature'
+
+        self.fig = fig
+
+    def fill_pressure_subplot(self) -> None:
+        '''
+        Fills pressure subplot using the dataframe.
+        :rtype: None
+        '''
+        pass
+
+    def fill_wind_subplot(self) -> None:
+        '''
+        Fills wind subplot using the dataframe.
+        :rtype: None
+        '''
+        pass
+
+    def fill_temperature_subplot(self) -> None:
+        '''
+        Fills temperature subplot using the dataframe.
+        :rtype: None
+        '''
+        pass
+
+    def fill_winddirection_subplot(self) -> None:
+        '''
+        Fills winddirection subplot using the dataframe.
+        :rtype: None
+        '''
+        pass
+
+    def update_layout(self) -> None:
+        '''
+        Updates the layout of the dashboard it should be used at the end to not 
+        override the layout.
+        :rtype: None
+        '''
+        now = datetime.now() - timedelta(days=1)
+
+        now_string = now.strftime("%Y-%m-%d  %H:%M:%S")
+        
+        self.fig.update_layout(title_text=now_string,
+                                font_size = 15, 
+                                height=700,
+                                autotypenumbers='convert types',
+                                showlegend = True,
+                                polar = dict(
+                                bgcolor = "rgb(223, 223, 223)",
+                                angularaxis = dict(
+                                    linewidth = 3,
+                                    showline=True,
+                                    linecolor='black'
+                                ),
+                                radialaxis = dict(
+                                    side = "counterclockwise",
+                                    showline = True,
+                                    linewidth = 2,
+                                    gridcolor = "white",
+                                    gridwidth = 2,
+                                )
+                                ),
+                                paper_bgcolor = "rgb(223, 223, 223)")
+
+    def generate_dash(self) -> None:
+        '''
+        Generates the dashboard using every previous method, class must be 
+        instantiated.
+        :rtype: None
+        '''
+        self.create_subplots()
+        self.update_layout()
+
 
 class MeteoBlueDashboard():
-    '''Class for MeteoBlue dashboard generation'''
+    '''Class for MeteoBlue Dashboard generation'''
 
     def __init__(self) -> None:
         '''
@@ -25,24 +188,25 @@ class MeteoBlueDashboard():
 
     def create_subplots(self) -> None:
         '''
-        Creates a subplot with 3 scatter plots to display Temperature, Precipitation, Wind
-        and WindDirection.
+        Creates a subplot with 3 scatter plots to display Temperature, 
+        Precipitation, Wind and WindDirection.
         :rtype = None
         '''
         df = self.df
-        # The x-axis needs to be sorted otherwise the plot will not work properly
+        #The x-axis needs to be sorted otherwise the plot will not work properly
         df.sort_index(inplace=True)
 
         df['time'] = df.index
 
         df.dropna(subset=['temp'], inplace=True)
 
-        fig = make_subplots(rows=3, cols=1,
-                        shared_xaxes=True,
-                        vertical_spacing=0.02,                    
-                        specs=[[{"type": "xy"}],
-                            [{"type": "xy"}],
-                            [{"type": "xy"}]],)
+        fig = make_subplots(rows=3, 
+                            cols=1,
+                            shared_xaxes=True,
+                            vertical_spacing=0.02,                    
+                            specs=[[{"type": "xy"}],
+                                  [{"type": "xy"}],
+                                  [{"type": "xy"}]],)
         
         
 
@@ -102,8 +266,6 @@ class MeteoBlueDashboard():
                         annotation_text="", annotation_position="top left",
                         fillcolor="yellow", opacity=0.25, line_width=0.2)
                 
-        
-
     def fill_precipitation_subplot() -> None:
         '''
         Fills the precipitation subplot using the dataframe
@@ -133,8 +295,8 @@ class MeteoBlueDashboard():
 
     def update_layout(self) -> None:
         '''
-        Updates the layout of the dashboard it should be used at the end to not override
-        the layout.
+        Updates the layout of the dashboard it should be used at the end to not 
+        override the layout.
         :rtype: None
         '''
 
@@ -147,7 +309,8 @@ class MeteoBlueDashboard():
         
     def generate_dash(self) -> None:
         '''
-        Generates the dashboard using every previous method, class must be instantiated.
+        Generates the dashboard using every previous method, class must be 
+        instantiated.
         :rtype: None
         '''
         self.create_subplots()
