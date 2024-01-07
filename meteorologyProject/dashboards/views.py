@@ -29,8 +29,12 @@ def meteoblue(request):
 
     template = loader.get_template("meteoblue.html")
     
+    now = datetime.now()
+
+    now_string = "Forecast update: " + now.strftime("%Y-%m-%d %H:%M")
+
     context = {
-        'data' : "hola"
-    }
+        'data' : now_string#target_plot_wind
+    } 
 
     return HttpResponse(template.render(context, request))  
