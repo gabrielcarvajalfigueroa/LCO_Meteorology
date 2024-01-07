@@ -4,6 +4,8 @@ from plotly.subplots import make_subplots
 from lcodataclient import dataclient
 from datetime import datetime, timedelta
 
+
+
 class VaisalaDashBoard():
     '''Class for Vaisala Dashboard'''
     def __init__(self, station) -> None:
@@ -38,66 +40,115 @@ class VaisalaDashBoard():
         fig = make_subplots(rows=3, 
                             cols=2,
                             shared_xaxes=True,
-                            vertical_spacing=0.02,                    
-                        specs=[[{"type": "xy"}, {"type": "polar", "rowspan": 3}],
+                            vertical_spacing=0,                    
+                        specs=[[{"type": "xy", "secondary_y": True}, {"type": "polar", "rowspan": 3}],
                               [{"type": "xy"}, {"type": "polar"}],
-                              [{"type": "xy"}, {"type": "polar"}]],)
+                              [{"type": "xy", "secondary_y": True}, {"type": "polar"}]],)
         
         
-
+        # Temperature plot
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['temperature'], 
                                  name="Temperature"),
-                                 row=3,
-                                 col=1)
+                                 row=1,
+                                 col=1,
+                                 secondary_y=False)
+        
+        # Humidity plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['relative_humidity'], 
+                                 name="Humidity"),
+                                 row=1,
+                                 col=1,
+                                 secondary_y=True)
 
+        # Wind plot
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['wind_speed_avg'], 
                                  name="Wind"),
                                  row=2, 
                                  col=1)
         
-        fig.add_trace(go.Scatter(x=df['time'], y=df['wind_speed_min'], name="WindMin"),
-                row=2, col=1)
+        # Air Pressure plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['air_pressure'], 
+                                 name="Pressure"),                                
+                                 secondary_y=False,
+                                 row=3, 
+                                 col=1)
+    
+        # Wind Minimum plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['wind_speed_min'], 
+                                 name="WindMin"),
+                                 row=2, 
+                                 col=1)
         
-        fig.add_trace(go.Scatter(x=df['time'], y=df['wind_speed_max'], name="WindMax"),
-                row=2, col=1)
+        # Wind Maximum plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['wind_speed_max'], 
+                                 name="WindMax"),
+                                 row=2, 
+                                 col=1)
+        
+        # Wind average direction plot
+        fig.add_trace(go.Scatterpolargl(r = df.wind_speed_avg,
+                                        theta = df.wind_dir_avg,
+                                        name = "Wind AVG",
+                                        mode = "markers",
+                                        marker=dict(size=15, 
+                                                    color="mediumseagreen")      
+                                        ),row=1,
+                                        col=2)
+        
+        # Wind minimum direction plot
+        fig.add_trace(go.Scatterpolargl(r = df.wind_speed_min,
+                                        theta = df.wind_dir_min,
+                                        name = "Wind MIN",
+                                        mode = "markers",
+                                        marker=dict(size=20, 
+                                                    color="gold", 
+                                                    opacity=0.7)      
+                                        ),row=1,
+                                        col=2)
+        
+        # Wind maximum direction plot
+        fig.add_trace(go.Scatterpolargl(r = df.wind_speed_max,
+                                        theta = df.wind_dir_max,
+                                        name = "Wind MAX",
+                                        mode="markers",
+                                        marker=dict(size=12, 
+                                                    color="red", 
+                                                    opacity=0.7)      
+                                        ),row=1,
+                                        col=2)
 
-        fig.add_trace(go.Scatter(x=df['time'], y=df['air_pressure'], name="Pressure"),
-                row=1, col=1)
+        # y-axis text layout
+        fig.update_yaxes(title_text="Temperature[°C]",
+                         secondary_y=False,
+                         row=1,
+                         col=1)
         
-        
-        fig.add_trace(go.Scatterpolargl(
-        r = df.wind_speed_avg,
-        theta = df.wind_dir_avg,
-        name = "Wind AVG",
-        mode = "markers",
-        marker=dict(size=15, color="mediumseagreen")      
-        ),row=1,
-        col=2)
-        
-        fig.add_trace(go.Scatterpolargl(
-        r = df.wind_speed_min,
-        theta = df.wind_dir_min,
-        name = "Wind MIN",
-        mode = "markers",
-        marker=dict(size=20, color="gold", opacity=0.7)      
-        ),row=1,
-        col=2)
-        
-        fig.add_trace(go.Scatterpolargl(
-        r = df.wind_speed_max,
-        theta = df.wind_dir_max,
-        name = "Wind MAX",
-        mode="markers",
-        marker=dict(size=12, color="red", opacity=0.7)      
-        ),row=1,
-        col=2)
+        fig.update_yaxes(title_text="Humidity[%]",
+                         secondary_y=True,
+                         row=1,
+                         col=1)
 
-
-        fig['layout']['yaxis']['title']='Pressure'
-        fig['layout']['yaxis2']['title']='Wind'
-        fig['layout']['yaxis3']['title']='Temperature'
+        fig.update_yaxes(title_text="Wind[Mph]",
+                         row=2,
+                         col=1)
+        
+        fig.update_yaxes(title_text="Pressure[mb]",
+                         secondary_y=False,
+                         row=3,
+                         col=1)
+        
+        #TODO: Find the values to place the text at the right side of the plot
+        fig.add_annotation(dict(x=0.39, y=0.3, ax=5, ay=0,
+                            xref = "paper", 
+                            yref = "paper", 
+                            text= "Sun Event: HH:MM - Twilight: HH:MM"),
+                            textangle=-90,)
 
         self.fig = fig
 
@@ -209,15 +260,26 @@ class MeteoBlueDashboard():
                                   [{"type": "xy"}]],)
         
         
+        # Temperature plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['temp'], 
+                                 name="Temperature"),
+                                 row=1, 
+                                 col=1)
 
-        fig.add_trace(go.Scatter(x=df['time'], y=df['temp'], name="Temperature"),
-                row=1, col=1)
-
-        fig.add_trace(go.Scatter(x=df['time'], y=df['relativehumidity'], name="Precipitation"),
-                row=2, col=1)
+        # Precipitation plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['relativehumidity'], 
+                                 name="Precipitation"),
+                                 row=2, 
+                                 col=1)
         
-        fig.add_trace(go.Scatter(x=df['time'], y=df['windspeed'], name="Wind"),
-                row=3, col=1)
+        # Wind plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['windspeed'], 
+                                 name="Wind"),
+                                 row=3, 
+                                 col=1)
         
         # Shows the name of the graph in y-axis
         fig['layout']['yaxis']['title']='Temperature'
@@ -229,7 +291,11 @@ class MeteoBlueDashboard():
 
         now_string = now.strftime("%Y-%m-%d %H:%M:%S")    
 
-        fig.add_vline(x=now_string, line_width=3, line_dash="dash", line_color="black")
+        # Displays the line
+        fig.add_vline(x=now_string, 
+                      line_width=3, 
+                      line_dash="dash", 
+                      line_color="black")
 
         self.fig = fig
 
@@ -240,31 +306,46 @@ class MeteoBlueDashboard():
         :rtype: None
         '''
 
-        df_aux = self.df
+        df= self.df
         fig = self.fig
 
-        df = df_aux
-
+        df['time_aux'] = df['time']
+        # Following code explanation
+        # check: https://stackoverflow.com/questions/63731256/how-to-show-ranges-of-repeated-values-in-a-colum-in-python-pandas
         (df.update((df.astype(str)).groupby((df.isdaylight!=df.isdaylight.shift())\
         .cumsum())["time"].transform(lambda x: x.iloc[0]+'+'+x.iloc[-1])))
-        df_max_min = df[['isdaylight', 'time']]
-        df_max_min=df_max_min.drop_duplicates()
+        df = df[['isdaylight', 'time']]
+        df = df.drop_duplicates()
 
-        #df_aux = self.df
-
-        #max_temp = df_aux.loc[df_aux['temp'].idxmax()]
-        #min_temp = df_aux.loc[df_aux['temp'].idxmin()]    
+        #TODO: find a way to not use df['time_aux']
+        max_temp = self.df.loc[self.df['temp'].idxmax()]
+        min_temp = self.df.loc[self.df['temp'].idxmin()]    
 
         #print(max_temp, "max temp es")
 
-        for index, row in df_max_min.iterrows():
+        for index, row in df.iterrows():
             if row['isdaylight']:            
                 x_axis = row['time'].split("+")
-
+                
                 #This code is for adding the sun time
                 fig.add_vrect(x0=x_axis[0], x1=x_axis[1], row="all", col=1,
                         annotation_text="", annotation_position="top left",
                         fillcolor="yellow", opacity=0.25, line_width=0.2)
+                #Adds the maximum value for temperature
+                fig.add_annotation(x=max_temp['time_aux'],
+                                y=max_temp['temp'],
+                                text=max_temp['temp'],
+                                showarrow=True,
+                                row=1,
+                                col=1)
+                #Adds the minimum value for temperature
+                fig.add_annotation(x=min_temp['time_aux'],
+                                y=min_temp['temp'],
+                                showarrow=True,
+                                text=min_temp['temp'],
+                                row=1,
+                                col=1)
+                
                 
     def fill_precipitation_subplot() -> None:
         '''
@@ -301,11 +382,11 @@ class MeteoBlueDashboard():
         '''
 
         self.fig.update_layout(title_text="LCO <br><sup>20.01°S / 70.69°W (2365m asl)</sup>",
-                        font_size = 15,
-                        height=700,
-                        showlegend = True,
-                        paper_bgcolor = "rgb(223, 223, 223)",
-                        autotypenumbers='convert types')
+                               font_size = 15,
+                               height=700,
+                               showlegend = True,
+                               paper_bgcolor = "rgb(223, 223, 223)",
+                               autotypenumbers='convert types')
         
     def generate_dash(self) -> None:
         '''

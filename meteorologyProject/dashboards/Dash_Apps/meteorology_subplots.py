@@ -1,12 +1,13 @@
 from os import name
 import dash_core_components as dcc
-import dash_html_components as html
+from dash import html
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 from django_plotly_dash import DjangoDash
 import pandas as pd
 from datetime import datetime, timedelta
 from .dashboards_components import VaisalaDashBoard
+
 
 
 stations = ["Magellan", "DuPont", "C40"]
@@ -27,7 +28,7 @@ app.layout = html.Div([
                       id = 'station',
                       options = [{'label': i, 'value': i} for i in stations],
                       value = "Magellan")],#Initial value for the dropdown
-                    style={'width': '25%', 'margin':'0px auto'}),
+                      style={'width': '25%', 'margin':'0px auto'}),
                     dcc.DatePickerSingle(
                         month_format='Y-M-D',
                         placeholder='Y-M-D',

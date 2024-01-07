@@ -7,7 +7,10 @@ from django.http import HttpResponse
 from django.template import loader
 from .plotly_graphs import *
 from datetime import datetime
+# DO NOT delete this import, it's used by the dash library
 from .Dash_Apps import meteorology_subplots, meteoblue_subplots
+
+
 
 # Create your views here.
 def dashboards(request):
@@ -19,7 +22,7 @@ def dashboards(request):
     now_string = "Forecast update: " + now.strftime("%Y-%m-%d %H:%M")
 
     context = {
-        'data' : now_string#target_plot_wind
+        'data' : now_string
     } 
     
 
@@ -34,7 +37,7 @@ def meteoblue(request):
     now_string = "Forecast update: " + now.strftime("%Y-%m-%d %H:%M")
 
     context = {
-        'data' : now_string#target_plot_wind
+        'data' : now_string
     } 
 
     return HttpResponse(template.render(context, request))  

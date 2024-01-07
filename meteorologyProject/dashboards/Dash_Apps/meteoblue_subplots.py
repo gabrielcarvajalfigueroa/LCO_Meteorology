@@ -1,14 +1,11 @@
 from os import name
 import dash_core_components as dcc
-import dash_html_components as html
+from dash import html
 from dash.dependencies import Input, Output
-import plotly.graph_objs as go
 from django_plotly_dash import DjangoDash
 import pandas as pd
-from plotly.subplots import make_subplots
-from lcodataclient import dataclient
-from datetime import datetime
 from .dashboards_components import MeteoBlueDashboard
+
 
 
 df = MeteoBlueDashboard()
@@ -24,7 +21,7 @@ app = DjangoDash(name='Meteoblue')
 app.layout = html.Div([                             
                     dcc.Graph(id = 'weatherlco_plot',
                               figure=  df.fig,
-                            animate = True, 
-                            style={"backgroundColor": "#FFF0F5"})                                                        
+                              animate = True, 
+                              style={"backgroundColor": "#FFF0F5"})                                                        
                     ])
 
