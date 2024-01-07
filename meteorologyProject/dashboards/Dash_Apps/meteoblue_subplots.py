@@ -44,8 +44,11 @@ def meteoblue_plotly_plot():
               row=3, col=1)
     
 
-    #TODO: Find the max_wind_spedd as an integer
+    #TODO: 1) Find the max_wind_spedd as an integer
     # And use: [max_wind_speed] * len(df) for setting the y value.
+    # 2) Find a way to add the max and min temp to each day, now the code is working
+    # because its only 1 day per GET Request.
+
     max_temp = df.loc[df['temp'].idxmax()]
     min_temp = df.loc[df['temp'].idxmin()]    
 

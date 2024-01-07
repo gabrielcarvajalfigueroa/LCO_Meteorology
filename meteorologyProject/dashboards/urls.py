@@ -4,5 +4,6 @@ from .Dash_Apps import meteorology_subplots, meteoblue_subplots
 
 
 urlpatterns = [
-    path('', views.dashboards),
+    path('', views.dashboards, name='vaisala'),
+    path('meteoblue/', views.meteoblue, name='meteoblue'),
 ]

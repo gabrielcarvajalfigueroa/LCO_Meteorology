@@ -25,3 +25,12 @@ def dashboards(request):
 
     return HttpResponse(template.render(context, request))
 
+def meteoblue(request):
+
+    template = loader.get_template("meteoblue.html")
+    
+    context = {
+        'data' : "hola"
+    }
+
+    return HttpResponse(template.render(context, request))  
