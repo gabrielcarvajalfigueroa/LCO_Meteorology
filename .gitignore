@@ -7,5 +7,8 @@ __pycache__/
 # Virtual Enviroment
 venv/
 
-#vscode personal settigns
+# vscode personal settigns
 .vscode/
+
+# Logs file
+logs.log

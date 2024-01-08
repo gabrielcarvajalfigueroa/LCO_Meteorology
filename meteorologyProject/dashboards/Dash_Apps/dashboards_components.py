@@ -3,6 +3,12 @@ import pandas as pd
 from plotly.subplots import make_subplots
 from lcodataclient import dataclient
 from datetime import datetime, timedelta
+import logging
+
+logging.basicConfig(filename='logs.log', 
+                    encoding='utf-8', 
+                    level=logging.DEBUG,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 
 
@@ -30,6 +36,7 @@ class VaisalaDashBoard():
         :rtype: None
         '''
         df = self.df
+
         
         df.sort_index(inplace=True)
 
@@ -218,8 +225,22 @@ class VaisalaDashBoard():
         instantiated.
         :rtype: None
         '''
+
         self.create_subplots()
-        self.update_layout()
+        self.update_layout()        
+        '''
+        try: 
+            self.create_subplots()
+            logging.info('Vaisala subplot created correctly')
+        except:
+            logging.error('Couldnt create Vaisala Subplots')            
+
+        try: 
+            self.update_layout()
+            logging.info('Vaisala layout updated correctly')
+        except:
+            logging.error('Couldnt update Vaisala layout')
+        '''    
 
 
 class MeteoBlueDashboard():
@@ -256,7 +277,7 @@ class MeteoBlueDashboard():
                             shared_xaxes=True,
                             vertical_spacing=0.02,                    
                             specs=[[{"type": "xy"}],
-                                  [{"type": "xy"}],
+                                  [{"type": "xy", "secondary_y": True}],
                                   [{"type": "xy"}]],)
         
         
@@ -269,7 +290,7 @@ class MeteoBlueDashboard():
 
         # Precipitation plot
         fig.add_trace(go.Scatter(x=df['time'], 
-                                 y=df['relativehumidity'], 
+                                 y=df['precipitation_probability'], 
                                  name="Precipitation"),
                                  row=2, 
                                  col=1)
@@ -282,9 +303,9 @@ class MeteoBlueDashboard():
                                  col=1)
         
         # Shows the name of the graph in y-axis
-        fig['layout']['yaxis']['title']='Temperature'
-        fig['layout']['yaxis2']['title']='Precipitation'
-        fig['layout']['yaxis3']['title']='Wind'
+        fig['layout']['yaxis']['title']='Temperature <br> °C'
+        #fig['layout']['yaxis2']['title']='Precipitation'
+        fig['layout']['yaxis3']['title']='(km/h)'
 
         # Adds a dash line for the actual time
         now = datetime.now()
@@ -347,12 +368,18 @@ class MeteoBlueDashboard():
                                 col=1)
                 
                 
-    def fill_precipitation_subplot() -> None:
+    def fill_precipitation_subplot(self) -> None:
         '''
         Fills the precipitation subplot using the dataframe
         :rtype: None
         '''
-        pass
+        self.fig.add_hrect(y0=0, 
+                           y1=1.2, 
+                           row=2, 
+                           col=1,                    
+                           fillcolor="brown", 
+                           opacity=0.65, 
+                           line_width=0.2)
     
     def fill_wind_subplot(self) -> None:
         '''
@@ -381,6 +408,19 @@ class MeteoBlueDashboard():
         :rtype: None
         '''
 
+        # y-axis text layout
+        self.fig.update_yaxes(title_text="Precipitation <br> (mm)",
+                         secondary_y=False,
+                         range=[0, 5],
+                         row=2,
+                         col=1)
+        
+        # y-axis text layout
+        self.fig.update_yaxes(title_text="(km/h)",
+                         secondary_y=False,
+                         row=3,
+                         col=1)
+
         self.fig.update_layout(title_text="LCO <br><sup>20.01°S / 70.69°W (2365m asl)</sup>",
                                font_size = 15,
                                height=700,
@@ -394,8 +434,231 @@ class MeteoBlueDashboard():
         instantiated.
         :rtype: None
         '''
+        
         self.create_subplots()
         self.fill_wind_subplot() # For some reason wind subplot must be first ? 
+        self.fill_precipitation_subplot()
         self.fill_temperature_subplot()
         self.update_layout()
         
+        '''
+        try: 
+            self.create_subplots()
+            logging.info('MeteoBlue subplot created correctly')
+        except:
+            logging.error('Couldnt create MeteoBlue Subplots')
+        
+        try: 
+            self.fill_temperature_subplot()
+            logging.info('MeteoBlue temperature subplot filled correctly')
+        except:
+            logging.error('Couldnt fill Meteoblue temperature subplot correctly')
+
+        try: 
+            self.fill_wind_subplot() # For some reason wind subplot must be first ? 
+            logging.info('MeteoBlue wind plot filled correctly')
+        except:
+            logging.error('Couldnt fill Meteoblue wind subplot correctly')
+
+        try: 
+            self.update_layout()
+            logging.info('MeteoBlue layout updated correctly')
+        except:
+            logging.error('Couldnt update Meteoblue layout')
+        '''    
+
+
+class Dummyrender():
+    def __init__(self, station) -> None:
+        '''
+        Init instance.
+        :rtype: None
+        '''
+
+        if station == "Magellan":
+            data = pd.read_csv(r"C:\Users\gcarv\Documents\LCO_Meteorology\meteorologyProject\dashboards\Dash_Apps\test_data\magellandf.csv")
+
+            self.df = data
+            self.fig = None #This is the plotly figure to display
+
+        if station == "DuPont":
+            data = pd.read_csv(r"C:\Users\gcarv\Documents\LCO_Meteorology\meteorologyProject\dashboards\Dash_Apps\test_data\dupontdf.csv")
+
+            self.df = data
+            self.fig = None #This is the plotly figure to display
+
+        if station == "C40":
+            data = pd.read_csv(r"C:\Users\gcarv\Documents\LCO_Meteorology\meteorologyProject\dashboards\Dash_Apps\test_data\c40df.csv")
+
+            self.df = data
+            self.fig = None #This is the plotly figure to display
+
+    def generate_dash(self) -> None:
+
+        df = self.df
+
+        # DewPoint column calculation
+        df['dp'] = df['temperature'] - ((100 - df['relative_humidity']) / 5)
+        
+        df.sort_index(inplace=True)
+
+        df.dropna(subset=['temperature'], inplace=True)
+
+        fig = make_subplots(rows=3, 
+                            cols=2,
+                            shared_xaxes=True,
+                            vertical_spacing=0,                    
+                        specs=[[{"type": "xy", "secondary_y": True}, {"type": "polar", "rowspan": 2}],
+                              [{"type": "xy"}, {"type": "polar"}],
+                              [{"type": "xy"}, {"type": "polar"}]],)
+        
+        
+        # Temperature plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['temperature'], 
+                                 line=dict(color="red"),
+                                 name="Temperature"),
+                                 row=1,
+                                 col=1,
+                                 secondary_y=False)
+        
+        # Dew Point
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['dp'], 
+                                 line=dict(color="purple"),
+                                 name="DewPoint"),
+                                 row=1,
+                                 col=1,
+                                 secondary_y=False)
+
+        
+        
+        # Humidity plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['relative_humidity'],
+                                 line=dict(color="blue"), 
+                                 name="Humidity"),
+                                 row=1,
+                                 col=1,
+                                 secondary_y=True)
+
+        # Wind plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['wind_speed_avg'], 
+                                 line=dict(color="green"),
+                                 name="Wind"),
+                                 row=2, 
+                                 col=1)
+        
+        # Air Pressure plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['temperature'], 
+                                 line=dict(color="black"),
+                                 name="Pressure"),                                                                 
+                                 row=3, 
+                                 col=1)
+    
+        # Wind Minimum plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['wind_speed_min'], 
+                                 line=dict(color="green"),
+                                 name="WindMin"),
+                                 row=2, 
+                                 col=1)
+        
+        # Wind Maximum plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['wind_speed_max'], 
+                                 line=dict(color="lightgreen"),
+                                 name="WindMax"),
+                                 row=2, 
+                                 col=1)
+        
+        # Wind average direction plot
+        fig.add_trace(go.Scatterpolargl(r = df.wind_speed_avg,
+                                        theta = df.wind_dir_avg,
+                                        name = "Wind AVG",
+                                        mode = "markers",
+                                        marker=dict(size=5, 
+                                                    color="mediumseagreen")      
+                                        ),row=1,
+                                        col=2)
+        
+        # Wind minimum direction plot
+        fig.add_trace(go.Scatterpolargl(r = df.wind_speed_min,
+                                        theta = df.wind_dir_min,
+                                        name = "Wind MIN", 
+                                        mode = "markers",
+                                        marker=dict(size=7, 
+                                                    color="lightgreen", 
+                                                    opacity=0.7)      
+                                        ),row=1,
+                                        col=2)
+        
+        # Wind maximum direction plot
+        fig.add_trace(go.Scatterpolargl(r = df.wind_speed_max,
+                                        theta = df.wind_dir_max,
+                                        name = "Wind MAX",
+                                        mode="markers",
+                                        marker=dict(size=8, 
+                                                    color="green", 
+                                                    opacity=0.7)      
+                                        ),row=1,
+                                        col=2)
+
+        # y-axis text layout
+        fig.update_yaxes(title_text="DP, Temperature[°C]",
+                         secondary_y=False,
+                         range=[-40, 40],
+                         row=1,
+                         col=1)
+        
+        fig.update_yaxes(title_text="Humidity[%]",
+                         secondary_y=True,
+                         range=[0, 100],
+                         row=1,
+                         col=1)
+
+        fig.update_yaxes(title_text="Wind[Mph]",
+                         range=[0, 50],
+                         row=2,
+                         col=1)
+        
+        fig.update_yaxes(title_text="Pressure[mb]",                         
+                         row=3,
+                         col=1)
+        
+        #TODO: Find the values to place the text at the right side of the plot
+        fig.add_annotation(dict(x=0.39, y=0.3, ax=5, ay=0,
+                            xref = "paper", 
+                            yref = "paper", 
+                            text= "Sun Event: HH:MM - Twilight: HH:MM"),
+                            textangle=-90,)
+        #eye
+        self.fig = fig
+
+        now = datetime.now() - timedelta(days=1)
+
+        now_string = now.strftime("%Y-%m-%d  %H:%M:%S")
+        
+        self.fig.update_layout(title_text=now_string,
+                                font_size = 15, 
+                                height=700,
+                                autotypenumbers='convert types',
+                                showlegend = True,
+                                polar = dict(
+                                bgcolor = "rgb(223, 223, 223)",
+                                angularaxis = dict(
+                                    linewidth = 3,
+                                    showline=True,
+                                    linecolor='black'
+                                ),
+                                radialaxis = dict(
+                                    side = "counterclockwise",
+                                    showline = True,
+                                    linewidth = 2,
+                                    gridcolor = "white",
+                                    gridwidth = 2,
+                                )
+                                ),
+                                paper_bgcolor = "rgb(223, 223, 223)")
