@@ -1,118 +1,12 @@
 from os import name
 import dash_core_components as dcc
-import dash_html_components as html
+from dash import html, callback_context
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 from django_plotly_dash import DjangoDash
 import pandas as pd
-from plotly.subplots import make_subplots
-from lcodataclient import dataclient
 from datetime import datetime, timedelta
-
-def dash_plotly_plot(station, now_string):
-    """
-    This function creates dash app 
-    Output: Figure object
-    """
-
-    m = dataclient.VaisalaData.parameters(station = station,
-                               start_ts = '2024-01-04 14:00:00',                                                                  
-                               limit = '1440')
-
-    df = dataclient.DataService.get(m)
-
-    df.sort_index(inplace=True)
-
-    df['time'] = df.index
-
-    print("El tipo del DF ES",type(dataclient.DataService.get(m)))
-
-    print(df.isnull().values.any())
-    df.dropna(subset=['temperature'], inplace=True)
-
-    fig = make_subplots(rows=3, cols=2,
-                    shared_xaxes=True,
-                    vertical_spacing=0.02,                    
-                    specs=[[{"type": "xy"}, {"type": "polar", "rowspan": 3}],
-                          [{"type": "xy"}, {"type": "polar"}],
-                          [{"type": "xy"}, {"type": "polar"}]],)
-    
-    
-
-    fig.add_trace(go.Scatter(x=df['time'], y=df['temperature'], name="Temperature"),
-              row=3, col=1)
-
-    fig.add_trace(go.Scatter(x=df['time'], y=df['wind_speed_avg'], name="Wind"),
-              row=2, col=1)
-    
-    fig.add_trace(go.Scatter(x=df['time'], y=df['wind_speed_min'], name="WindMin"),
-              row=2, col=1)
-    
-    fig.add_trace(go.Scatter(x=df['time'], y=df['wind_speed_max'], name="WindMax"),
-              row=2, col=1)
-
-    fig.add_trace(go.Scatter(x=df['time'], y=df['air_pressure'], name="Pressure"),
-              row=1, col=1)
-    
-    
-    fig.add_trace(go.Scatterpolargl(
-      r = df.wind_speed_avg,
-      theta = df.wind_dir_avg,
-      name = "Wind AVG",
-      mode = "markers",
-      marker=dict(size=15, color="mediumseagreen")      
-    ),row=1,
-      col=2)
-    
-    fig.add_trace(go.Scatterpolargl(
-      r = df.wind_speed_min,
-      theta = df.wind_dir_min,
-      name = "Wind MIN",
-      mode = "markers",
-      marker=dict(size=20, color="gold", opacity=0.7)      
-    ),row=1,
-      col=2)
-    
-    fig.add_trace(go.Scatterpolargl(
-      r = df.wind_speed_max,
-      theta = df.wind_dir_max,
-      name = "Wind MAX",
-      mode="markers",
-      marker=dict(size=12, color="red", opacity=0.7)      
-    ),row=1,
-      col=2)
-
-
-    fig['layout']['yaxis']['title']='Pressure'
-    fig['layout']['yaxis2']['title']='Wind'
-    fig['layout']['yaxis3']['title']='Temperature'
-
-
-    #fig.update_traces(mode="markers", marker=dict(line_color='white', opacity=0.7))
-
-    fig.update_layout(title_text=now_string,
-                      font_size = 15, height=700,
-    showlegend = True,
-    polar = dict(
-      bgcolor = "rgb(223, 223, 223)",
-      angularaxis = dict(
-        linewidth = 3,
-        showline=True,
-        linecolor='black'
-      ),
-      radialaxis = dict(
-        side = "counterclockwise",
-        showline = True,
-        linewidth = 2,
-        gridcolor = "white",
-        gridwidth = 2,
-      )
-    ),
-    paper_bgcolor = "rgb(223, 223, 223)")
-
-
-    
-    return fig
+from .dashboards_components import VaisalaDashBoard, Dummyrender
 
 
 stations = ["Magellan", "DuPont", "C40"]
@@ -133,23 +27,23 @@ app.layout = html.Div([
                       id = 'station',
                       options = [{'label': i, 'value': i} for i in stations],
                       value = "Magellan")],#Initial value for the dropdown
-                    style={'width': '25%', 'margin':'0px auto'}),
-                    dcc.DatePickerSingle(
-                        month_format='Y-M-D',
-                        placeholder='Y-M-D',
-                        date=now_string
-                    ),
+                      style={'width': '25%', 'margin':'0px auto'}),
+                    dcc.DatePickerRange(end_date=now,
+                                        display_format='MMM Do, YY',
+                                        start_date_placeholder_text='MMM Do, YY'
+                                    ),
                     html.Button('Set Date to Now'),
+                    html.Button("Download CSV", id="btn_csv"),
+                    dcc.Download(id="download-dataframe-csv"),
 
                 html.Div([                 
                     dcc.Graph(id = 'station_plot', 
-                              animate = True, 
+                              animate = False, 
                               style={"backgroundColor": "#FFF0F5"})
                               ])
                         ])
 
 #Define app input and output callbacks
-#'''
 @app.callback(
                Output('station_plot', 'figure'), #id of html component
               [Input('station', 'value')]) #id of html component
@@ -160,14 +54,54 @@ def display_value(station):
     Input: Value specified
     Output: Figure object
     """
-    #Get city plot with input value
-    now = datetime.now() - timedelta(days=1)
+    
+    print("---------------Data de", station)
+    df = Dummyrender(station)
 
-    now_string = now.strftime("%Y-%m-%d  %H:%M:%S")
+    df.generate_dash()
+
+    return df.fig
     
-    fig = dash_plotly_plot(station, now_string)
     
-    return fig
+    '''
+    df = VaisalaDashBoard(station)
+
+    df.generate_dash()    
+
+
+    return df.fig
+    '''
+
+
+@app.callback(
+    Output("download-dataframe-csv", "data"),
+    Input("btn_csv", "n_clicks"), 
+    Input('station', 'value'),
+    prevent_initial_call=True)
+
+def func(*args,**kwargs):
+    '''
+    This function is responsible to download the csv but ONLY when the button
+    is clicked, without this function the code downloads the csv when changing
+    the dropdown or when the button is clicked because of how dash app callback 
+    inputs works.
+    '''
+    
+    # In Django_plotly_dash is necessary to use kwargs otherwise it wont work
+    # For more info check:
+    # https://stackoverflow.com/questions/76686162/handling-different-actions-based-on-click-event-and-search-in-django-plotly-dash
+    ctx = kwargs['callback_context']
+    
+    # The context is received as a list with a dictionary inside thats why
+    # you have to call [0] and the .get('prop_id')
+    if ctx.triggered[0].get('prop_id') == 'btn_csv.n_clicks':
+        # The input values are recived as args
+        # args[0]: btn_csv.n_clicks
+        # args[1]: station.value
+        data = Dummyrender(args[1])
+
+        return dcc.send_data_frame(data.df.to_csv, f"{args[1]}-{now_string}.csv")
+
 
 # Callback for live updating
 #'''

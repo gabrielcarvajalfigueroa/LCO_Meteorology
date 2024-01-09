@@ -54,7 +54,7 @@ nav {
     <nav>
         <ul class="horizontal-nav">
             <li class="dropdown">
-                <a href="#">Stations</a>
+                <a href="{% url 'vaisala' %}">Stations</a>
                 <ul class="dropdown-content">
                     <li><a href="#">Option 1</a></li>
                     <li><a href="#">Option 2</a></li>
@@ -69,9 +69,9 @@ nav {
     </nav>
 
     {% load plotly_dash %}
-    {% plotly_app name="Subplots" ratio=0.45 %}
+    {% plotly_app name="Meteoblue" ratio=0.38 %}
 
-     {{data|safe}}
+    {{data|safe}}
     
 
 
