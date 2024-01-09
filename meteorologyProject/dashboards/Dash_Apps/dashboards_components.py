@@ -418,7 +418,7 @@ class MeteoBlueDashboard():
         # y-axis text layout
         self.fig.update_yaxes(title_text="(km/h)",
                          secondary_y=False,
-                         row=3,
+                         row=2,
                          col=1)
 
         self.fig.update_layout(title_text="LCO <br><sup>20.01°S / 70.69°W (2365m asl)</sup>",
