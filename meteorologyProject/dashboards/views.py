@@ -41,3 +41,17 @@ def meteoblue(request):
     } 
 
     return HttpResponse(template.render(context, request))  
+
+def otherResources(request):
+
+    template = loader.get_template("otherResources.html")
+    
+    now = datetime.now()
+
+    now_string = "Forecast update: " + now.strftime("%Y-%m-%d %H:%M")
+
+    context = {
+        'data' : now_string
+    } 
+
+    return HttpResponse(template.render(context, request))      
