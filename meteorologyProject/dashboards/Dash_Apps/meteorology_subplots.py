@@ -99,7 +99,10 @@ app.layout = html.Div([
                       style={'width': '25%', 'margin':'0px auto'}),                
                     html.Button("Download CSV", id="btn_csv"),
                     dcc.Download(id="download-dataframe-csv"),
-
+                    dcc.Interval(id='interval-component',
+                                 interval= 5 * 60000, # every 5 minutes,
+                                 n_intervals=0
+                             ),
             html.Div([
 
                             html.Div([ 
@@ -123,8 +126,8 @@ app.layout = html.Div([
                             html.Div([
                                     gif.GifPlayer(
                                     id= 'redanim',
-                                    gif='https://clima.lco.cl/casca/redanim.gif?2905718',
-                                    still='https://fakeimg.pl/340x340/'
+                                    gif= app.get_asset_url('redanim.gif'),  #'https://clima.lco.cl/casca/redanim.gif?2905718',
+                                    still= app.get_asset_url('redanimpic.png') #'https://fakeimg.pl/340x340/'
                                 )
                             ], style={'grid-column-start': '2', 'grid-row-start': '3', 'margin-left': 'auto', 'margin-right': 'auto'}),
                             
@@ -132,13 +135,16 @@ app.layout = html.Div([
                                 gif.GifPlayer( 
                                     id='satanim',
                                     gif= app.get_asset_url('satanim.gif'),
-                                    still='https://fakeimg.pl/680x680/'
+                                    still= app.get_asset_url('20240201220.png')
                             )
                             ], style={'grid-column-start': '3', 'grid-row-start': '1', 'grid-row-end': '3'}),
 
                             
 
-            ], style={'display': 'grid', 'grid-template-columns': '800px 340px 1fr', 'grid-template-rows': '180px 160px 1fr'})
+            ], style={'display': 'grid', 'grid-template-columns': '800px 340px 1fr', 'grid-template-rows': '180px 160px 1fr'}),
+
+             html.Div(id='hidden-div', style={'display':'none'}) #This div is a dummy for using live update
+
 ])
 
 #'https://clima.lco.cl/casca/satanim.gif?5836492'
@@ -267,3 +273,5 @@ def update_metrics(n):
     #make_gif()
     
     return "lco"
+
+

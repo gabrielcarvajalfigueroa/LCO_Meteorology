@@ -123,8 +123,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-#STATIC_ROOT = BASE_DIR / 'staticfiles'
-#STATICFILES_DIRS = [BASE_DIR / 'static',]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATICFILES_DIRS = [BASE_DIR / 'static',]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -160,7 +161,7 @@ PLOTLY_COMPONENTS = [
     'dash_html_components',
     'dash_renderer',
     'dpd_components',
-    #'dpd_static_support',
+    'dpd_static_support',
     'gif_player']
 
 #Add X_FRAME_OPTIONS = 'SAMEORIGIN' to settings.py to enable frames within HTML documents

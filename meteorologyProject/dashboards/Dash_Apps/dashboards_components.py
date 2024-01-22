@@ -714,6 +714,9 @@ class Dummyrender():
         df.dropna(subset=['temperature'], inplace=True)
 
         self.fig_seeing = px.scatter(df, x=df['time'], y=df['temperature'])
+
+        self.fig_seeing.update_yaxes(title_text="seeing")
+
         self.fig_seeing.update_layout(showlegend=False, 
                                       height=200,
                                       paper_bgcolor = "rgb(223, 223, 223)")
