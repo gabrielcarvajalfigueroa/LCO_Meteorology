@@ -8,8 +8,6 @@ import pandas as pd
 from datetime import datetime, timedelta
 from .dashboards_components import VaisalaDashBoard, Dummyrender, MeteoBlueDashboard
 
-from .script import make_gif
-
 import gif_player as gif
 
 
@@ -21,73 +19,7 @@ now_string = now.strftime("%Y-%m-%d  %H:%M:%S")
 
 #Create DjangoDash applicaiton
 app = DjangoDash(name='Subplots', serve_locally=True)
-'''
-#Configure app layout
-app.layout = html.Div([
-                html.Div([
-                    
-                    #Add dropdown for option selection
-                    dcc.Dropdown(
-                      id = 'station',
-                      options = [{'label': i, 'value': i} for i in stations],
-                      value = "Magellan")],#Initial value for the dropdown
-                      style={'width': '25%', 'margin':'0px auto'}),                
-                    html.Button("Download CSV", id="btn_csv"),
-                    dcc.Download(id="download-dataframe-csv"),
-                    
 
-                html.Div([                 
-                    dcc.Graph(id = 'station_plot', 
-                              animate = False, 
-                              style={"backgroundColor": "#FFF0F5"}),
-                    
-                    dcc.Interval(id='interval-component',
-                                 interval= 5 * 60000, # every 5 minutes,
-                                 n_intervals=0
-                             )
-                              ]),
-                html.Div(id='hidden-div', style={'display':'none'})
-                        ])
-'''        
-
-
-'''
-app.layout = html.Div([
-                html.Div([
-                    
-                    #Add dropdown for option selection
-                    dcc.Dropdown(
-                      id = 'station',
-                      options = [{'label': i, 'value': i} for i in stations],
-                      value = "Magellan"),#Initial value for the dropdown
-                      html.Button("Download CSV", id="btn_csv"),
-                      dcc.Download(id="download-dataframe-csv")],
-                      style={'width': '25%', 'margin':'0px auto', 'grid-column-start': '2', 'grid-row-start': '2'}),                                    
-                    
-
-                html.Div([                 
-                    dcc.Graph(id = 'station_plot', 
-                              animate = False, 
-                              style={"backgroundColor": "#FFF0F5"}),
-                    
-                    dcc.Interval(id='interval-component',
-                                 interval= 5 * 60000, # every 5 minutes,
-                                 n_intervals=0
-                             )
-                              ], style={'grid-column-start': '1', 'grid-row-start': '1'}),
-                
-                html.Div([
-                    dcc.Graph(id = 'weatherlco_plot',
-                              figure=  df.fig,
-                              animate = True, 
-                              style={"backgroundColor": "#FFF0F5"})
-                ], style={'grid-column-start': '2', 'grid-row-start': '1'}),
-
-                html.Div(id='hidden-div', style={'display':'none'})
-                        ], style={'display': 'grid', 'grid-template-columns': '1fr 1fr', 'grid-template-rows': '1fr 1fr'})
-'''
-
-# fig_stations_plot.fig
 
 app.layout = html.Div([
 
@@ -100,7 +32,7 @@ app.layout = html.Div([
                     html.Button("Download CSV", id="btn_csv"),
                     dcc.Download(id="download-dataframe-csv"),
                     dcc.Interval(id='interval-component',
-                                 interval= 5 * 60000, # every 5 minutes,
+                                 interval= 3 * 60000, # every 5 minutes,
                                  n_intervals=0
                              ),
             html.Div([
@@ -126,8 +58,8 @@ app.layout = html.Div([
                             html.Div([
                                     gif.GifPlayer(
                                     id= 'redanim',
-                                    gif= app.get_asset_url('redanim.gif'),  #'https://clima.lco.cl/casca/redanim.gif?2905718',
-                                    still= app.get_asset_url('redanimpic.png') #'https://fakeimg.pl/340x340/'
+                                    gif= app.get_asset_url('redanim.gif'),  
+                                    still= app.get_asset_url('redanimpic.png') 
                                 )
                             ], style={'grid-column-start': '2', 'grid-row-start': '3', 'margin-left': 'auto', 'margin-right': 'auto'}),
                             
@@ -147,23 +79,8 @@ app.layout = html.Div([
 
 ])
 
-#'https://clima.lco.cl/casca/satanim.gif?5836492'
 
-'''
-@app.callback(
-        Output('satanim', 'gif'),
-        Input('update_gif', 'n_clicks'))
-
-def get_new_gif(n_clicks):  
-    print(n_clicks)
-
-    if n_clicks == 2:
-
-        return 'https://clima.lco.cl/casca/redanim.gif?2905718'      
-    return 'https://clima.lco.cl/casca/satanim.gif?5836492'
-'''
-
-#Define app input and output callbacks
+# Callback for updating stations plot
 @app.callback(
                Output('station_plot', 'figure'), #id of html component
               [Input('station', 'value')]) #id of html component
@@ -182,7 +99,7 @@ def display_value(station):
 
     return df.fig
 
-#Define app input and output callbacks
+# Callback for updating the polar chart
 @app.callback(
                Output('scattergl_plot', 'figure'), #id of html component
               [Input('station', 'value')]) #id of html component
@@ -201,7 +118,7 @@ def display_value(station):
 
     return df.fig_scattergl
 
-#Define app input and output callbacks
+# Callback for updating seeing plot
 @app.callback(
                Output('seeing_plot', 'figure'), #id of html component
               [Input('station', 'value')]) #id of html component
@@ -219,18 +136,8 @@ def display_value(station):
     df.generate_seeing_plot()
 
     return df.fig_seeing
-    
-    
-    
-    #df = VaisalaDashBoard(station)
 
-    #df.generate_dash()    
-
-
-    #return df.fig
-    
-
-
+# Callback for downloading csv 
 @app.callback(
     Output("download-dataframe-csv", "data"),
     Input("btn_csv", "n_clicks"), 
@@ -262,16 +169,16 @@ def func(*args,**kwargs):
         return dcc.send_data_frame(data.df.to_csv, f"{args[1]}-{now_string}.csv")
 
 
-# Callback for live updating
-
-@app.callback(Output("hidden-div", "value"),
+# Callback for updating gifs
+@app.callback(Output("satanim", "gif"),
               [Input('interval-component', 'n_intervals')])
 def update_metrics(n):
-   
-    print(n)
-    print("hola")
-    #make_gif()
     
-    return "lco"
+    print("--------------------------")
+    print("ABOUT TO UPDATE GIF")
+    print(app.get_asset_url('sa4tanim.gif'))
+    print("--------------------------")
+
+    return app.get_asset_url('sa4tanim.gif')
 
 

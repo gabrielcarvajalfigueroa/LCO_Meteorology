@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'dashboards',
+    "django_celery_beat",
+    'django_celery_results',
     'django_plotly_dash.apps.DjangoPlotlyDashConfig',
 
     'dpd_static_support',
@@ -133,14 +136,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # The Following variables are neccesary for using django_plotly_dash library
 
-'''
-#Add STATICFILES_FINDERS 
-STATICFILES_FINDERS = [
-    'django_plotly_dash.finders.DashAssetFinder',
-    'django_plotly_dash.finders.DashComponentFinder'
-]
-'''
-
 STATICFILES_FINDERS = [
 
     'django.contrib.staticfiles.finders.FileSystemFinder',
@@ -166,3 +161,24 @@ PLOTLY_COMPONENTS = [
 
 #Add X_FRAME_OPTIONS = 'SAMEORIGIN' to settings.py to enable frames within HTML documents
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+
+# Celery settings
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0" #"redis://%s:6379" % (os.environ.get("REDIS_HOST", "127.0.0.1"))
+#CELERY_RESULT_BACKEND = "redis://%s:6379" % (os.environ.get("REDIS_HOST", "127.0.0.1"))
+#CELERY_CACHE_BACKEND = "redis://%s:6379" % (os.environ.get("REDIS_HOST", "127.0.0.1"))
+#CELERY_ACCEPT_CONTENT = ["application/json"]
+#CELERY_TASK_SERIALIZER = "json"
+#CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_EXTENDED = True
+
+# Celery Beat settings
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+CELERY_BEAT_SCHEDULE = {
+     'create_gif':{
+         'task':'dashboards.tasks.create_gif',
+         'schedule': 120
+         }
+}

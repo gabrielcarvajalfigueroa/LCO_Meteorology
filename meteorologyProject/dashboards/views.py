@@ -5,7 +5,6 @@ import plotly.graph_objects as go
 from plotly.offline import plot
 from django.http import HttpResponse
 from django.template import loader
-from .plotly_graphs import *
 from datetime import datetime
 # DO NOT delete this import, it's used by the dash library
 from .Dash_Apps import meteorology_subplots, meteoblue_subplots
