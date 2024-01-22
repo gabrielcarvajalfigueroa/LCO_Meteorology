@@ -12,10 +12,12 @@ information in a pandas dataframe. The data is displayed in dashboards using:
 Django, Dash and Ploty. To integrate all of these 3 technologies the project uses **django_plotly_dash**. All of this is done following the OOP paradigm, PEP 8 and the folder structures that Django gives.
 
 <p align="center">
-  <a href="#how-it-works">How it works</a>
+  <a href="#how-it-works">How it works •</a>
   <a href="#getting-started">Getting Started</a> •
-  <a href="#installing">Installing</a> •
-  <a href="#built-with">Built with</a>
+  <a href="#installing">Installing •</a>   
+  <a href="#satellite-script">Satellite Script •</a>
+  <a href="#dash-gif-component">Dash Gif Component •</a>
+  <a href="#built-with">Built with </a>
 </p>
 
 ## How it works
@@ -53,13 +55,13 @@ The main libraries of this project are:
 
  ``` bash
 # First create virtual enviroment
-$ python -m venv venv
+$ python3 -m venv venv
 
-# Second activate the virtual enviroment (Windows 10)
-$ .\venv\Scripts\activate
+# Second activate the virtual enviroment (Ubuntu)
+$ source venv/bin/activate
 
 # Install the requirements in the virtual enviroment
-$ python install -r requirements.txt
+$ python3 install -r requirements.txt
 ```
 
 ### Installing
@@ -69,11 +71,80 @@ local machine.
 
 ``` bash
 # First go to the django project folder
-cd .\meteorologyProject
+$ cd ./meteorologyProject
 
 # Second start the local server
-python manage.py runserver
+$ python3 manage.py runserver
 ```
+
+## Satellite Script
+
+This application also handles the creation of a gif to display satellital data of the weather around
+Chile. This script can create the gif every certain amount of time, this is achieved by using celery.
+
+To accomplish this the app uses celery beat who acts as broker for invoking the script when defined.
+
+Once the Django app is up you can start the **worker** with the following:
+
+``` bash
+# Start the celery worker
+$ celery -A meteorologyProject worker -l info
+```
+
+Now you can start the **broker** for invoking the script:
+
+``` bash
+# Start the celery broker
+$ celery -A meteorologyProject beat -l info -S django_celery_beat.schedulers:DatabaseScheduler
+```
+
+It is important that in `settings.py` you have the configuration with the following structure:
+
+``` bash
+# Celery settings
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_EXTENDED = True
+
+# Celery Beat settings
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+CELERY_BEAT_SCHEDULE = {
+     'create_gif':{
+         'task':'dashboards.tasks.create_gif',
+         'schedule': 120 # Sets the script to be invoked every 120 seconds
+         }
+}
+``` 
+
+Regarding the script, it basically uses web-scraping for downloading images from a public site, converts
+them in a gif and finally stores it in the app.
+
+The script also saves the downloaded images in folders but only allowing "x" amount of folders which can be setted in `config.ini`. 
+
+For more information regarding the functionality of the script check: [Python Script](https://github.com/gabrielcarvajalfigueroa/Satellite_gifmaker/blob/main/main.py)
+
+## Dash Gif Component
+
+For adding the functionality of having a Gif that you can pause and play this app uses a custom dash component
+which is called Gif Player, essentially it borrows the existing [react-gif-player](https://github.com/benwiley4000/react-gif-player) and then converts it into a 
+python class so it can be called within `meteorology_subplots.py` like this:
+
+``` bash
+html.Div([
+          gif.GifPlayer( 
+              id='satanim',
+              gif= app.get_asset_url('satanim.gif'),
+              still= app.get_asset_url('20240201220.png')
+      )
+      ], style={'grid-column-start': '3', 'grid-row-start': '1', 'grid-row-end': '3'}),
+```
+
+[This component](https://github.com/mbkupfer/dash-gif-component) was not created by me, but I had to add the `id` attribute otherwise you can not call it in a 
+callback. For adding this I had to recreate the custom component following [Dash Custom Components](https://dash.plotly.com/react-for-python-developers).
+
+If you want to check more about the changes I made to the component here: [Dash-Gif-Player](https://github.com/gabrielcarvajalfigueroa/Dash-Gif-Player).
 
 ## Built With
 
@@ -84,6 +155,7 @@ Plotly Dash applications served up in Django templates using tags.
 * [Plotly](https://plotly.com/) - Used to generate the graphs.
 * [lcodataclient]() - Module for obtaining the data in dataframes.
 * [Pandas](https://pandas.pydata.org/) - Used to manipulate the dataframes.
+* [Celery](https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html) - Used for task scheduling
 
 
 ## Author

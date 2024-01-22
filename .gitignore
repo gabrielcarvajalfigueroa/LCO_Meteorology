@@ -12,3 +12,8 @@ venv/
 
 # Logs file
 logs.log
+
+# static files
+static/
+
+staticfiles/
