@@ -6,7 +6,9 @@ import plotly.graph_objs as go
 from django_plotly_dash import DjangoDash
 import pandas as pd
 from datetime import datetime, timedelta
-from .dashboards_components import VaisalaDashBoard, Dummyrender
+from .dashboards_components import VaisalaDashBoard, Dummyrender, MeteoBlueDashboard
+
+import gif_player as gif
 
 
 stations = ["Magellan", "DuPont", "C40"]
@@ -16,34 +18,69 @@ now = datetime.now() - timedelta(days=1)
 now_string = now.strftime("%Y-%m-%d  %H:%M:%S")
 
 #Create DjangoDash applicaiton
-app = DjangoDash(name='Subplots')
+app = DjangoDash(name='Subplots', serve_locally=True)
 
-#Configure app layout
+
 app.layout = html.Div([
-                html.Div([
-                    
-                    #Add dropdown for option selection
+
+            #Add dropdown for option selection
                     dcc.Dropdown(
                       id = 'station',
                       options = [{'label': i, 'value': i} for i in stations],
-                      value = "Magellan")],#Initial value for the dropdown
-                      style={'width': '25%', 'margin':'0px auto'}),
-                    dcc.DatePickerRange(end_date=now,
-                                        display_format='MMM Do, YY',
-                                        start_date_placeholder_text='MMM Do, YY'
-                                    ),
-                    html.Button('Set Date to Now'),
+                      value = "Magellan",#Initial value for the dropdown
+                      style={'width': '25%', 'margin':'0px auto'}),                
                     html.Button("Download CSV", id="btn_csv"),
                     dcc.Download(id="download-dataframe-csv"),
+                    dcc.Interval(id='interval-component',
+                                 interval= 3 * 60000, # every 5 minutes,
+                                 n_intervals=0
+                             ),
+            html.Div([
 
-                html.Div([                 
-                    dcc.Graph(id = 'station_plot', 
-                              animate = False, 
-                              style={"backgroundColor": "#FFF0F5"})
-                              ])
-                        ])
+                            html.Div([ 
+                                dcc.Graph(id = 'seeing_plot', 
+                                        animate = False,
+                                        style={"backgroundColor": "#FFF0F5"}),
+                            ], style={'grid-column-start': '1', 'grid-row-start': '1'}),
 
-#Define app input and output callbacks
+                            html.Div([
+                                dcc.Graph(id = 'station_plot',
+                                        animate = False, 
+                                        style={"backgroundColor": "#FFF0F5"}),
+                            ], style={'grid-column-start': '1', 'grid-row-start': '2', 'grid-row-end': 'span 2'}),
+
+                            html.Div([
+                                dcc.Graph(id = 'scattergl_plot',
+                                        animate = False, 
+                                        style={"backgroundColor": "#FFF0F5"}),
+                            ], style={'grid-column-start': '2', 'grid-row-start': '1', 'grid-row-end': 'span 2'}),
+
+                            html.Div([
+                                    gif.GifPlayer(
+                                    id= 'redanim',
+                                    gif= app.get_asset_url('redanim.gif'),  
+                                    still= app.get_asset_url('redanimpic.png') 
+                                )
+                            ], style={'grid-column-start': '2', 'grid-row-start': '3', 'margin-left': 'auto', 'margin-right': 'auto'}),
+                            
+                            html.Div([
+                                gif.GifPlayer( 
+                                    id='satanim',
+                                    gif= app.get_asset_url('satanim.gif'),
+                                    still= app.get_asset_url('20240201220.png')
+                            )
+                            ], style={'grid-column-start': '3', 'grid-row-start': '1', 'grid-row-end': '3'}),
+
+                            
+
+            ], style={'display': 'grid', 'grid-template-columns': '800px 340px 1fr', 'grid-template-rows': '180px 160px 1fr'}),
+
+             html.Div(id='hidden-div', style={'display':'none'}) #This div is a dummy for using live update
+
+])
+
+
+# Callback for updating stations plot
 @app.callback(
                Output('station_plot', 'figure'), #id of html component
               [Input('station', 'value')]) #id of html component
@@ -58,21 +95,49 @@ def display_value(station):
     print("---------------Data de", station)
     df = Dummyrender(station)
 
-    df.generate_dash()
+    df.generate_stations_plot()
 
     return df.fig
+
+# Callback for updating the polar chart
+@app.callback(
+               Output('scattergl_plot', 'figure'), #id of html component
+              [Input('station', 'value')]) #id of html component
+              
+def display_value(station):
+    """
+    This function returns figure object according to value input
+    Input: Value specified
+    Output: Figure object
+    """
     
+    print("---------------Data de", station)
+    df = Dummyrender(station)
+
+    df.generate_scattergl_plot()
+
+    return df.fig_scattergl
+
+# Callback for updating seeing plot
+@app.callback(
+               Output('seeing_plot', 'figure'), #id of html component
+              [Input('station', 'value')]) #id of html component
+              
+def display_value(station):
+    """
+    This function returns figure object according to value input
+    Input: Value specified
+    Output: Figure object
+    """
     
-    '''
-    df = VaisalaDashBoard(station)
+    print("---------------Data de", station)
+    df = Dummyrender(station)
 
-    df.generate_dash()    
+    df.generate_seeing_plot()
 
+    return df.fig_seeing
 
-    return df.fig
-    '''
-
-
+# Callback for downloading csv 
 @app.callback(
     Output("download-dataframe-csv", "data"),
     Input("btn_csv", "n_clicks"), 
@@ -80,12 +145,13 @@ def display_value(station):
     prevent_initial_call=True)
 
 def func(*args,**kwargs):
-    '''
-    This function is responsible to download the csv but ONLY when the button
-    is clicked, without this function the code downloads the csv when changing
-    the dropdown or when the button is clicked because of how dash app callback 
-    inputs works.
-    '''
+    #
+    #This function is responsible to download the csv but ONLY when the button
+    #is clicked, without this function the code downloads the csv when changing
+    #the dropdown or when the button is clicked because of how dash app callback 
+    #inputs works.
+    #
+    
     
     # In Django_plotly_dash is necessary to use kwargs otherwise it wont work
     # For more info check:
@@ -103,17 +169,16 @@ def func(*args,**kwargs):
         return dcc.send_data_frame(data.df.to_csv, f"{args[1]}-{now_string}.csv")
 
 
-# Callback for live updating
-#'''
-'''
-@app.callback(Output('station_plot', 'extendData'),
-              Input('interval-component', 'n_intervals'))
+# Callback for updating gifs
+@app.callback(Output("satanim", "gif"),
+              [Input('interval-component', 'n_intervals')])
 def update_metrics(n):
-    now = datetime.now() - timedelta(days=1)
+    
+    print("--------------------------")
+    print("ABOUT TO UPDATE GIF")
+    print(app.get_asset_url('sa4tanim.gif'))
+    print("--------------------------")
 
-    now_string = now.strftime("%Y-%m-%d  %H:%M:%S")
-    
-    fig = dash_plotly_plot("Magellan", now_string)
-    
-    return fig
-'''    
+    return app.get_asset_url('sa4tanim.gif')
+
+

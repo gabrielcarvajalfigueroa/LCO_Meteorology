@@ -4,6 +4,10 @@ from plotly.subplots import make_subplots
 from lcodataclient import dataclient
 from datetime import datetime, timedelta
 import logging
+import os
+
+import plotly.express as px
+
 
 logging.basicConfig(filename='logs.log', 
                     encoding='utf-8', 
@@ -476,22 +480,29 @@ class Dummyrender():
         '''
 
         if station == "Magellan":
-            data = pd.read_csv(r"C:\Users\gcarv\Documents\LCO_Meteorology\meteorologyProject\dashboards\Dash_Apps\test_data\magellandf.csv")
+            print(os.getcwd())
+            data = pd.read_csv("dashboards/Dash_Apps/test_data/magellandf.csv")
 
             self.df = data
             self.fig = None #This is the plotly figure to display
+            self.fig_seeing = None
+            self.fig_scattergl = None
 
         if station == "DuPont":
-            data = pd.read_csv(r"C:\Users\gcarv\Documents\LCO_Meteorology\meteorologyProject\dashboards\Dash_Apps\test_data\dupontdf.csv")
+            data = pd.read_csv("dashboards/Dash_Apps/test_data/dupontdf.csv")
 
             self.df = data
             self.fig = None #This is the plotly figure to display
+            self.fig_seeing = None
+            self.fig_scattergl = None
 
         if station == "C40":
-            data = pd.read_csv(r"C:\Users\gcarv\Documents\LCO_Meteorology\meteorologyProject\dashboards\Dash_Apps\test_data\c40df.csv")
+            data = pd.read_csv("dashboards/Dash_Apps/test_data/c40df.csv")
 
             self.df = data
             self.fig = None #This is the plotly figure to display
+            self.fig_seeing = None
+            self.fig_scattergl = None
 
     def generate_dash(self) -> None:
 
@@ -510,7 +521,7 @@ class Dummyrender():
                             vertical_spacing=0,                    
                         specs=[[{"type": "xy", "secondary_y": True}, {"type": "polar", "rowspan": 2}],
                               [{"type": "xy"}, {"type": "polar"}],
-                              [{"type": "xy"}, {"type": "polar"}]],)
+                              [{"type": "xy"}, {"type": "xy"}]],)
         
         
         # Temperature plot
@@ -573,6 +584,24 @@ class Dummyrender():
                                  name="WindMax"),
                                  row=2, 
                                  col=1)
+
+        
+        #This code is useful for creating the vertical lines for sunrise and sunset
+        sunrise_event = "2024-01-05 07:00:00"
+        sunset_event = "2024-01-06 21:00:00"
+
+    
+        # Displays the line for Sunrise
+        fig.add_vline(x=sunrise_event, 
+                      line_width=3,                       
+                      line_color="grey",
+                      col=1)
+
+        # Displays the line for Sunset
+        fig.add_vline(x=sunset_event, 
+                      line_width=3,                        
+                      line_color="grey",
+                      col=1)                                  
         
         # Wind average direction plot
         fig.add_trace(go.Scatterpolargl(r = df.wind_speed_avg,
@@ -606,6 +635,190 @@ class Dummyrender():
                                         ),row=1,
                                         col=2)
 
+        # Seeing plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['temperature'], 
+                                 line=dict(color="red"),
+                                 name="Temperature"),
+                                 row=3,
+                                 col=2,
+                                 secondary_y=False)                                               
+
+        # y-axis text layout
+        fig.update_yaxes(title_text="DP, Temperature[°C]",
+                         secondary_y=False,
+                         range=[-40, 40],
+                         row=1,
+                         col=1)
+        
+        fig.update_yaxes(title_text="Humidity[%]",
+                         secondary_y=True,
+                         range=[0, 100],
+                         row=1,
+                         col=1)
+
+        fig.update_yaxes(title_text="Wind[Mph]",
+                         range=[0, 50],
+                         row=2,
+                         col=1)
+        
+        fig.update_yaxes(title_text="Pressure[mb]",                         
+                         row=3,
+                         col=1)
+
+        fig.update_yaxes(title_text="Seeing",                         
+                         row=3,
+                         col=2)     
+        
+        
+        #TODO: Find the values to place the text at the right side of the plot
+        fig.add_annotation(dict(x=0.39, y=0.3, ax=5, ay=0,
+                            xref = "paper", 
+                            yref = "paper", 
+                            text= f'Sun Event: {sunrise_event[11:16]} - Twilight: {sunset_event[11:16]}'),
+                            textangle=-90,)
+        #eye
+        self.fig = fig
+
+        now = datetime.now() - timedelta(days=1)
+
+        now_string = now.strftime("%Y-%m-%d  %H:%M:%S")
+        
+        self.fig.update_layout(title_text=now_string,
+                                font_size = 15, 
+                                height=700,
+                                autotypenumbers='convert types',
+                                showlegend = False,
+                                polar = dict(
+                                bgcolor = "rgb(223, 223, 223)",
+                                angularaxis = dict(
+                                    linewidth = 3,
+                                    showline=True,
+                                    linecolor='black'
+                                ),
+                                radialaxis = dict(
+                                    side = "counterclockwise",
+                                    showline = True,
+                                    linewidth = 2,
+                                    gridcolor = "white",
+                                    gridwidth = 2,
+                                )
+                                ),
+                                paper_bgcolor = "rgb(223, 223, 223)")
+
+    def generate_seeing_plot(self) -> None:
+        df = self.df
+
+        df.sort_index(inplace=True)
+
+        df.dropna(subset=['temperature'], inplace=True)
+
+        self.fig_seeing = px.scatter(df, x=df['time'], y=df['temperature'])
+
+        self.fig_seeing.update_yaxes(title_text="seeing")
+
+        self.fig_seeing.update_layout(showlegend=False, 
+                                      height=200,
+                                      paper_bgcolor = "rgb(223, 223, 223)")
+
+    def generate_stations_plot(self) -> None:
+        df = self.df
+
+        # DewPoint column calculation
+        df['dp'] = df['temperature'] - ((100 - df['relative_humidity']) / 5)
+        
+        df.sort_index(inplace=True)
+
+        df.dropna(subset=['temperature'], inplace=True)
+
+        fig = make_subplots(rows=3, 
+                            cols=1,
+                            shared_xaxes=True,
+                            vertical_spacing=0,                    
+                        specs=[[{"type": "xy", "secondary_y": True}],
+                              [{"type": "xy"}],
+                              [{"type": "xy"}]],)
+        
+        
+        # Temperature plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['temperature'], 
+                                 line=dict(color="red"),
+                                 name="Temperature"),
+                                 row=1,
+                                 col=1,
+                                 secondary_y=False)
+        
+        # Dew Point
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['dp'], 
+                                 line=dict(color="purple"),
+                                 name="DewPoint"),
+                                 row=1,
+                                 col=1,
+                                 secondary_y=False)
+
+        
+        
+        # Humidity plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['relative_humidity'],
+                                 line=dict(color="blue"), 
+                                 name="Humidity"),
+                                 row=1,
+                                 col=1,
+                                 secondary_y=True)
+
+        # Wind plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['wind_speed_avg'], 
+                                 line=dict(color="green"),
+                                 name="Wind"),
+                                 row=2, 
+                                 col=1)
+        
+        # Air Pressure plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['temperature'], 
+                                 line=dict(color="black"),
+                                 name="Pressure"),                                                                 
+                                 row=3, 
+                                 col=1)
+    
+        # Wind Minimum plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['wind_speed_min'], 
+                                 line=dict(color="green"),
+                                 name="WindMin"),
+                                 row=2, 
+                                 col=1)
+        
+        # Wind Maximum plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['wind_speed_max'], 
+                                 line=dict(color="lightgreen"),
+                                 name="WindMax"),
+                                 row=2, 
+                                 col=1)
+
+        
+        #This code is useful for creating the vertical lines for sunrise and sunset
+        sunrise_event = "2024-01-05 07:00:00"
+        sunset_event = "2024-01-06 21:00:00"
+
+    
+        # Displays the line for Sunrise
+        fig.add_vline(x=sunrise_event, 
+                      line_width=3,                       
+                      line_color="grey",
+                      col=1)
+
+        # Displays the line for Sunset
+        fig.add_vline(x=sunset_event, 
+                      line_width=3,                        
+                      line_color="grey",
+                      col=1)                                                                           
+
         # y-axis text layout
         fig.update_yaxes(title_text="DP, Temperature[°C]",
                          secondary_y=False,
@@ -628,12 +841,14 @@ class Dummyrender():
                          row=3,
                          col=1)
         
+        
         #TODO: Find the values to place the text at the right side of the plot
-        fig.add_annotation(dict(x=0.39, y=0.3, ax=5, ay=0,
+        fig.add_annotation(dict(x=0.99, y=0.3, ax=5, ay=0,
                             xref = "paper", 
                             yref = "paper", 
-                            text= "Sun Event: HH:MM - Twilight: HH:MM"),
-                            textangle=-90,)
+                            text= f'Sun Event: {sunrise_event[11:16]} - Twilight: {sunset_event[11:16]}'),
+                            textangle=-90,
+                            font_size=13)
         #eye
         self.fig = fig
 
@@ -641,11 +856,55 @@ class Dummyrender():
 
         now_string = now.strftime("%Y-%m-%d  %H:%M:%S")
         
-        self.fig.update_layout(title_text=now_string,
-                                font_size = 15, 
-                                height=700,
+        self.fig.update_layout( font_size = 10, 
+                                height=500,                                
                                 autotypenumbers='convert types',
-                                showlegend = True,
+                                showlegend = False,                                
+                                paper_bgcolor = "rgb(223, 223, 223)")
+
+    def generate_scattergl_plot(self) -> None:
+        df = self.df        
+        
+        df.sort_index(inplace=True)
+
+        df.dropna(subset=['temperature'], inplace=True)
+
+        self.fig_scattergl = go.Figure()
+
+        # Wind average direction plot
+        self.fig_scattergl.add_trace(go.Scatterpolargl(r = df.wind_speed_avg,
+                                        theta = df.wind_dir_avg,
+                                        name = "Wind AVG",
+                                        mode = "markers",
+                                        marker=dict(size=5, 
+                                                    color="mediumseagreen")      
+                                        ))
+        
+        # Wind minimum direction plot
+        self.fig_scattergl.add_trace(go.Scatterpolargl(r = df.wind_speed_min,
+                                        theta = df.wind_dir_min,
+                                        name = "Wind MIN", 
+                                        mode = "markers",
+                                        marker=dict(size=7, 
+                                                    color="lightgreen", 
+                                                    opacity=0.7)      
+                                        ))
+        
+        # Wind maximum direction plot
+        self.fig_scattergl.add_trace(go.Scatterpolargl(r = df.wind_speed_max,
+                                        theta = df.wind_dir_max,
+                                        name = "Wind MAX",
+                                        mode="markers",
+                                        marker=dict(size=8, 
+                                                    color="green", 
+                                                    opacity=0.7)      
+                                        ))
+
+        self.fig_scattergl.update_layout(
+                                font_size = 15,                                 
+                                height=340,
+                                autotypenumbers='convert types',
+                                showlegend = False,
                                 polar = dict(
                                 bgcolor = "rgb(223, 223, 223)",
                                 angularaxis = dict(
@@ -661,4 +920,4 @@ class Dummyrender():
                                     gridwidth = 2,
                                 )
                                 ),
-                                paper_bgcolor = "rgb(223, 223, 223)")
+                                paper_bgcolor = "rgb(223, 223, 223)")                                        

@@ -7,6 +7,8 @@ import pandas as pd
 from .dashboards_components import MeteoBlueDashboard
 
 
+import os
+
 
 df = MeteoBlueDashboard()
 
@@ -18,6 +20,7 @@ app = DjangoDash(name='Meteoblue')
 # Maybe it will be neccesary to add lambda for reloading the page correctly
 # check: https://stackoverflow.com/questions/54192532/how-to-use-dash-callback-without-an-input
 #Configure app layout
+
 app.layout = html.Div([                             
                     dcc.Graph(id = 'weatherlco_plot',
                               figure=  df.fig,
