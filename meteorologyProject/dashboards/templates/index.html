@@ -1,70 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Las Campanas Observatory Weather Page</title>
-    <style>        
-nav {
-    background-color: whitesmoke; 
-}
+<!--This html renders the live stations app-->
 
-.horizontal-nav {
-    list-style-type: none;
-    display: flex; 
-    justify-content: space-around;
-    padding: 10px 0;
-}
+<!-- Renders the navbar -->
+{% include 'navbar.html'%}
 
-.horizontal-nav li {
-    display: inline;
-}
-
-.horizontal-nav a {
-    text-decoration: none;
-    color: grey;
-    padding: 10px 20px;
-    display: inline-block;
-    transition: background-color 0.3s;
-}
-
-.horizontal-nav a:hover {
-    background-color: #555; 
-}
-
-img#redanim {
-    height: 340px;
-    width: 340px;
-}
-
-    </style>
-   
-</head>
-
-<body>
-    <nav>
-        <ul class="horizontal-nav">
-            <li>
-                <a class="navbar-brand" href="http://www.lco.cl">
-                    <img src="https://www.lco.cl/wp-content/uploads/2020/01/CS_lascamp_logo_horz-LCO.png" width="275" height="54" alt="">
-                </a>
-            </li>
-            <li class="dropdown">
-                <a href="{% url 'vaisala' %}">Stations</a>                
-            </li>
-            <li>
-                <a href="{% url 'meteoblue' %}">Forecast</a>
-            </li>
-            <li><a href="#">All Sky Camera</a></li>
-            <li><a href="#">Dust Sensor</a></li>
-            <li><a href="{% url 'otherResources' %}">Other Resources</a></li>
-        </ul>
-    </nav>
-
-    {% load plotly_dash %}
-    {% plotly_app name="Subplots" ratio=0.835 %}
-
-
-</body>
-
-</html>
+<!-- Renders the plotly app -->
+{% load plotly_dash %}
+{% plotly_app name="Subplots" ratio=0.835 %}        

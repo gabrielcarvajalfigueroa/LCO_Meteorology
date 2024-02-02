@@ -1,93 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Las Campanas Observatory Weather Page</title>
-    <style>        
-nav {
-    background-color: whitesmoke; 
-}
+<!-- Renders the navbar -->
+{% include 'navbar.html'%}
 
-.horizontal-nav {
-    list-style-type: none;
-    display: flex; 
-    justify-content: space-around;
-    padding: 10px 0;
-}
-
-.horizontal-nav li {
-    display: inline;
-}
-
-.horizontal-nav a {
-    text-decoration: none;
-    color: grey;
-    padding: 10px 20px;
-    display: inline-block;
-    transition: background-color 0.3s;
-}
-
-.horizontal-nav a:hover {
-    background-color: #555; 
-}
-
-
-    </style>
-</head>
-<body>
-    <nav>
-        <ul class="horizontal-nav">
-            <li>
-                <a class="navbar-brand" href="http://www.lco.cl">
-                    <img src="https://www.lco.cl/wp-content/uploads/2020/01/CS_lascamp_logo_horz-LCO.png" width="275" height="54" alt="">
-                </a>
-            </li>
-            <li class="dropdown">
-                <a href="{% url 'vaisala' %}">Stations</a>                
-            </li>
-            <li>
-                <a href="{% url 'meteoblue' %}">Forecast</a>
-            </li>
-            <li><a href="#">All Sky Camera</a></li>
-            <li><a href="#">Dust Sensor</a></li>
-            <li><a href="{% url 'otherResources' %}">Other Resources</a></li>
-        </ul>
-    </nav>
-
-    <main role="main" class="container" style="margin-left: 35rem;">
+<!-- Renders other resources for information -->
+<div class="bg-light">
+    <main role="main" class="container">
         <div class="my-3 p-3 bg-white rounded shadow-sm" style="font-family: PT Sans;">
-          <h4 class="border-bottom border-gray pb-2 mb-0" style="color: rgb(115, 115, 115) !important; --darkreader-inline-color: #9f978b;" data-darkreader-inline-color="">Other Resources</h4>
+          <h4 class="border-bottom border-gray pb-2 mb-0" style="color: #737373 !important;">Other Resources</h4>
           <div class="d-block p-2">
-               <p style="color: rgb(115, 115, 115) !important; --darkreader-inline-color: #9f978b;" data-darkreader-inline-color=""> Weather Stations </p>
+               <p style="color: #737373 !important;"> Weather Stations </p>
                 <p>
                 </p><ul>
-                     <li><a style="color: rgb(0, 153, 204); --darkreader-inline-color: #3dcfff;" href="http://lcohsnode.lco.cl/~hatuser/wth/" target="_blank" data-darkreader-inline-color="">HAT South</a></li>
-                     <li><a style="color: rgb(0, 153, 204); --darkreader-inline-color: #3dcfff;" href="http://www.ls.eso.org/lasilla/dimm/" target="_blank" data-darkreader-inline-color="">La Silla MeteoMonitor</a></li>
-                     <li><a style="color: rgb(0, 153, 204); --darkreader-inline-color: #3dcfff;" href="http://www.ctio.noao.edu/noao/content/Environmental-Page" target="_blank" data-darkreader-inline-color="">CTIO Site Environmental Conditions</a></li>
-                     <li><a style="color: rgb(0, 153, 204); --darkreader-inline-color: #3dcfff;" href="https://www.gemini.edu/sciops/telescopes-and-sites/weather/cerro-pachon/envmon/" target="_blank" data-darkreader-inline-color="">Gemini South Environmental Monitor</a></li>
+                     <li><a style="color: #09c;" href="http://lcohsnode.lco.cl/~hatuser/wth/" target="_blank">HAT South</a></li>
+                     <li><a style="color: #09c;" href="http://www.ls.eso.org/lasilla/dimm/" target="_blank">La Silla MeteoMonitor</a></li>
+                     <li><a style="color: #09c;" href="http://www.ctio.noao.edu/noao/content/Environmental-Page" target="_blank">CTIO Site Environmental Conditions</a></li>
+                     <li><a style="color: #09c;" href="https://www.gemini.edu/sciops/telescopes-and-sites/weather/cerro-pachon/envmon/" target="_blank">Gemini South Environmental Monitor</a></li>
                 </ul>
                 <p></p>
-                <p style="color: rgb(115, 115, 115) !important; --darkreader-inline-color: #9f978b;" data-darkreader-inline-color="">Earthquake </p>
+                <p style="color: #737373 !important;">Earthquake </p>
                 <p>
                 </p><ul>
-                     <li><a style="color: rgb(0, 153, 204); --darkreader-inline-color: #3dcfff;" href="https://earthquake.usgs.gov/earthquakes/map/?extent=-68.84767,-193.35938&amp;extent=33.43144,52.20703&amp;baseLayer=terrain" target="_blank" data-darkreader-inline-color="">USGS</a></li>
-                     <li><a style="color: rgb(0, 153, 204); --darkreader-inline-color: #3dcfff;" href="http://www.sismologia.cl" target="_blank" data-darkreader-inline-color="">Centro Sismológico Nacional Chile</a></li>
-                     <li><a style="color: rgb(0, 153, 204); --darkreader-inline-color: #3dcfff;" href="https://earthquake.usgs.gov/monitoring/operations/stations/IU/LCO" target="_blank" data-darkreader-inline-color="">USGS Las Campanas Astronomical Observatory</a></li>
+                     <li><a style="color: #09c;" href="https://earthquake.usgs.gov/earthquakes/map/?extent=-68.84767,-193.35938&amp;extent=33.43144,52.20703&amp;baseLayer=terrain" target="_blank">USGS</a></li>
+                     <li><a style="color: #09c;" href="http://www.sismologia.cl" target="_blank">Centro Sismológico Nacional Chile</a></li>
+                     <li><a style="color: #09c;" href="https://earthquake.usgs.gov/monitoring/operations/stations/IU/LCO" target="_blank">USGS Las Campanas Astronomical Observatory</a></li>
                 </ul>
                 <p></p>
-                <p style="color: rgb(115, 115, 115) !important; --darkreader-inline-color: #9f978b;" data-darkreader-inline-color="">Light Pollution </p>
+                <p style="color: #737373 !important;">Light Pollution </p>
                 <p>
                 </p><ul>
-                     <li><a style="color: rgb(0, 153, 204); --darkreader-inline-color: #3dcfff;" href="https://www.darksky.org" target="_blank" data-darkreader-inline-color="">International Dark Sky Association</a></li>
-                     <li><a style="color: rgb(0, 153, 204); --darkreader-inline-color: #3dcfff;" href="https://cieloschile.cl" target="_blank" data-darkreader-inline-color="">Fundación Cielos de Chile</a></li>
+                     <li><a style="color: #09c;" href="https://www.darksky.org" target="_blank">International Dark Sky Association</a></li>
+                     <li><a style="color: #09c;" href="https://cieloschile.cl" target="_blank">Fundación Cielos de Chile</a></li>
                 </ul>
                 <p></p>
           </div>
          </div>
         
       </main>
-
-
-</body>
-</html>
+    </div>
