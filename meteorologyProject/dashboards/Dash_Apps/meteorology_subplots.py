@@ -7,6 +7,7 @@ from django_plotly_dash import DjangoDash
 import pandas as pd
 from datetime import datetime, timedelta
 from .dashboards_components import VaisalaDashBoard, Dummyrender, MeteoBlueDashboard
+from random import randint
 
 
 import gif_player as gif
@@ -31,8 +32,7 @@ toolbar_config = {"displayModeBar": True,
                      'select2d']}
 
 #Create DjangoDash applicaiton
-app = DjangoDash(name='Subplots', serve_locally=True)
-
+app = DjangoDash(name='Subplots')
 
 app.layout = html.Div([
 
@@ -43,7 +43,10 @@ app.layout = html.Div([
                       value = "Magellan",#Initial value for the dropdown
                       style={'width': '25%', 'margin':'0px auto'}),                
                     html.Button("Download CSV", id="btn_csv"),
-                    dcc.Download(id="download-dataframe-csv"),
+                    html.Link(rel = "stylesheet",
+                            type = "text/css",
+                            href = "http://127.0.0.1:9900/stations_imgs.css"),
+                    dcc.Download(id="download-dataframe-csv"),                         
                     dcc.Interval(id='interval-component',
                                  interval= 2 * 60000, # every 5 minutes,
                                  n_intervals=0
@@ -77,19 +80,23 @@ app.layout = html.Div([
 
                             html.Div([
                                     gif.GifPlayer(
-                                    id= 'redanim',
-                                    gif=  app.get_asset_url('redanim.gif'),#"http://127.0.0.1:8000/static//dpd/assets/dashboards/Dash_Apps/meteorology_subplots/satanim.gif"app.get_asset_url('redanim.gif'),  
-                                    still= app.get_asset_url('redanimpic.png') 
+                                    id= 'redanim',                                    
+                                    gif=  "https://weather.lco.cl/casca/redanim.gif?3588110",#"http://127.0.0.1:8000/static//dpd/assets/dashboards/Dash_Apps/meteorology_subplots/satanim.gif"app.get_asset_url('redanim.gif'),  
+                                    still= "https://weather.lco.cl/casca/latestred.png",    
+                                    height = 340,                                
+                                    width = 340
                                 )
                             ], style={'grid-column-start': '2', 'grid-row-start': '3', 'margin-left': 'auto', 'margin-right': 'auto'}),
                             
                             html.Div([
                                 gif.GifPlayer( 
                                     id='satanim',
-                                    gif= "http://127.0.0.1:9900/satanim.gif",#app.get_asset_url('satanim.gif'),
-                                    still= "http://127.0.0.1:9900/still.png",#app.get_asset_url('20240201220.png')
+                                    gif= "http://127.0.0.1:9900/satanim.gif?69",#app.get_asset_url('satanim.gif'),
+                                    still= "http://127.0.0.1:9900/still.png?69",#app.get_asset_url('20240201220.png')
+                                    height=10,
+                                    width=10
                             )
-                            ], style={'grid-column-start': '3', 'grid-row-start': '1', 'grid-row-end': '3'}),
+                            ], style={'grid-column-start': '3', 'grid-row-start': '1', 'grid-row-end': 'span 3'}),
 
                             html.Div(id="gifdiv"),
 
@@ -167,17 +174,21 @@ def func(*args,**kwargs):
 # Callback for updating gifs
 @app.callback([Output("satanim", "gif"),
                Output("satanim", "still")],
-              [Input('interval-component', 'n_intervals')])
+              [Input('interval-component', 'n_intervals')],
+              prevent_initial_call=True)
 def update_metrics(n):
     
     print("--------------------------")
     print("ABOUT TO UPDATE GIF")
     print("--------------------------")
 
-    print(n)
+    print(n)    
+
+    gif = "http://127.0.0.1:9900/satanim.gif?" + str(randint(100,999))
+    still = "http://127.0.0.1:9900/still.png?" + str(randint(100,999))
         
 
-    return "http://127.0.0.1:9900/satanim.gif", "http://127.0.0.1:9900/still.png"
+    return gif, still
     
     #if n%2==0:
     #return "https://clima.lco.cl/casca/satanim.gif?4621460", app.get_asset_url('20240201220.png')

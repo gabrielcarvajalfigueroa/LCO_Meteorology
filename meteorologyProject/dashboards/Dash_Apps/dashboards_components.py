@@ -316,7 +316,7 @@ class VaisalaDashBoard():
                                 font_color="green",
                                 showarrow=False)
             # -------------------------------
-            # Lines for ephemeris
+            #       Lines for ephemeris
             # -------------------------------
         
             ephems = self.get_ephems()
@@ -359,12 +359,12 @@ class VaisalaDashBoard():
                                 font_size=13)
 
             # -------------------------------
-            # Line for half an hour ago
+            #   Line for half an hour ago
             # -------------------------------
 
             half_hour = now_hour - timedelta(minutes=30)
             fig.add_vline(x=half_hour.strftime("%Y-%m-%d %H:%M:%S"), 
-                        line_width=3,
+                        line_width=3,   
                         opacity=0.3,
                         line_color="magenta")
 
