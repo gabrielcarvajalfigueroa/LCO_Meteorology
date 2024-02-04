@@ -7,8 +7,7 @@ from django.http import HttpResponse
 from django.template import loader
 from datetime import datetime
 # DO NOT delete this import, it's used by the dash library
-from .Dash_Apps import meteorology_subplots, meteoblue_subplots
-
+from .Dash_Apps import meteorology_subplots, meteoblue_subplots, history_subplots
 
 
 # Create your views here.
@@ -54,3 +53,37 @@ def otherResources(request):
     } 
 
     return HttpResponse(template.render(context, request))      
+
+def webcams(request):
+
+    template = loader.get_template("webcams.html")
+    
+    now = datetime.now()
+
+    now_string = "Forecast update: " + now.strftime("%Y-%m-%d %H:%M")
+
+    context = {
+        'data' : now_string
+    } 
+
+    return HttpResponse(template.render(context, request))    
+
+def history(request):
+
+    template = loader.get_template("history.html")
+
+    context = {
+        'data' : ''
+    } 
+
+    return HttpResponse(template.render(context, request)) 
+
+def allskycamera(request):
+
+    template = loader.get_template("allskycamera.html")
+
+    context = {
+        'data' : ''
+    } 
+
+    return HttpResponse(template.render(context, request))     

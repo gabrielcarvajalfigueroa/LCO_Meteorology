@@ -5,12 +5,11 @@ from dash.dependencies import Input, Output
 import plotly.graph_objs as go
 from django_plotly_dash import DjangoDash
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from .dashboards_components import VaisalaDashBoard, Dummyrender, MeteoBlueDashboard
-from random import randint
 
 
-import gif_player as gif
+
 
 
 stations = ["Magellan", "DuPont", "C40"]
@@ -32,7 +31,8 @@ toolbar_config = {"displayModeBar": True,
                      'select2d']}
 
 #Create DjangoDash applicaiton
-app = DjangoDash(name='Subplots')
+app = DjangoDash(name='History', serve_locally=True)
+
 
 app.layout = html.Div([
 
@@ -43,18 +43,8 @@ app.layout = html.Div([
                       value = "Magellan",#Initial value for the dropdown
                       style={'width': '25%', 'margin':'0px auto'}),                
                     html.Button("Download CSV", id="btn_csv"),
-                    html.Link(rel = "stylesheet",
-                            type = "text/css",
-                            href = "http://127.0.0.1:9900/stations_imgs.css"),
-                    dcc.Download(id="download-dataframe-csv"),                         
-                    dcc.Interval(id='interval-component',
-                                 interval= 2 * 60000, # every 5 minutes,
-                                 n_intervals=0
-                             ),
-                    dcc.Interval(id='interval-component-update',
-                        interval= 5 * 60000, # every 5 minutes,
-                        n_intervals=0
-                    ),
+                    dcc.Download(id="download-dataframe-csv"),
+                    
             html.Div([
 
                             html.Div([ 
@@ -79,32 +69,19 @@ app.layout = html.Div([
                             ], style={'grid-column-start': '2', 'grid-row-start': '1', 'grid-row-end': 'span 2'}),
 
                             html.Div([
-                                    gif.GifPlayer(
-                                    id= 'redanim',                                    
-                                    gif=  "https://weather.lco.cl/casca/redanim.gif?3588110",#"http://127.0.0.1:8000/static//dpd/assets/dashboards/Dash_Apps/meteorology_subplots/satanim.gif"app.get_asset_url('redanim.gif'),  
-                                    still= "https://weather.lco.cl/casca/latestred.png",    
-                                    height = 340,                                
-                                    width = 340
-                                )
-                            ], style={'grid-column-start': '2', 'grid-row-start': '3', 'margin-left': 'auto', 'margin-right': 'auto'}),
-                            
-                            html.Div([
-                                gif.GifPlayer( 
-                                    id='satanim',
-                                    gif= "http://127.0.0.1:9900/satanim.gif?69",#app.get_asset_url('satanim.gif'),
-                                    still= "http://127.0.0.1:9900/still.png?69",#app.get_asset_url('20240201220.png')
-                                    height=10,
-                                    width=10
-                            )
-                            ], style={'grid-column-start': '3', 'grid-row-start': '1', 'grid-row-end': 'span 3'}),
-
-                            html.Div(id="gifdiv"),
+                                dcc.DatePickerSingle(
+                                        id='history-date-picker',                                        
+                                        min_date_allowed=datetime.now() - timedelta(days=14),
+                                        max_date_allowed=datetime.now() - timedelta(days=1),
+                                        placeholder="Click here"
+                                    ),
+                            ], style={'grid-column-start': '3', 'grid-row-start': '1'}) 
 
                             
 
             ], style={'display': 'grid', 'grid-template-columns': '800px 340px 1fr', 'grid-template-rows': '180px 160px 1fr'}),
 
-             html.Div(id='hidden-div', style={'display':'none'}) #This div is a dummy for using live update
+             
 
 ])
 
@@ -115,7 +92,8 @@ app.layout = html.Div([
                [Output('station_plot', 'figure'),
                 Output('scattergl_plot', 'figure'),
                 Output('seeing_plot', 'figure')], #id of html component
-              [Input('station', 'value'), Input('interval-component-update', 'n_intervals')]) #id of html component
+              [Input('station', 'value'), Input('history-date-picker', 'date')],
+              prevent_initial_call=True) #id of html component
               
 def update_value(*args,**kwargs):
     """
@@ -123,17 +101,24 @@ def update_value(*args,**kwargs):
     Input: Value specified
     Output: Figure object
     """
+    # args[0]: station value eg. Magellan
+    # args[1]: date selected eg. 2024-02-01 -> str    
 
-    print("---- About to Update ----", args[0])
+    start_ts = datetime.strptime(args[1] + " 00:00:00", '%Y-%m-%d %H:%M:%S')
 
-    df = VaisalaDashBoard(args[0])
+    end_ts = start_ts + timedelta(days=1)
+
+    start_ts = start_ts.strftime("%Y-%m-%d %H:%M:%S")
+    end_ts = end_ts.strftime("%Y-%m-%d %H:%M:%S")
+
+    df = VaisalaDashBoard(args[0], start_ts, end_ts)
     
     df.generate_stations_plot()
 
     df.generate_scattergl_plot()
 
     df.generate_seeing_plot()
-
+    
     return df.fig, df.fig_scattergl, df.fig_seeing
 
 
@@ -142,8 +127,7 @@ def update_value(*args,**kwargs):
 # Callback for downloading csv 
 @app.callback(
     Output("download-dataframe-csv", "data"),
-    Input("btn_csv", "n_clicks"), 
-    Input('station', 'value'),
+    [Input("btn_csv", "n_clicks"), Input('station', 'value'), Input('history-date-picker', 'date')],
     prevent_initial_call=True)
 
 def func(*args,**kwargs):
@@ -166,31 +150,16 @@ def func(*args,**kwargs):
         # The input values are recived as args
         # args[0]: btn_csv.n_clicks
         # args[1]: station.value
-        data = VaisalaDashBoard(args[1])
+        # args[2]: selected date
+        start_ts = datetime.strptime(args[2] + " 00:00:00", '%Y-%m-%d %H:%M:%S')
 
-        return dcc.send_data_frame(data.df.to_csv, f"{args[1]}-{now_string}.csv")
+        end_ts = start_ts + timedelta(days=1)
 
+        start_ts = start_ts.strftime("%Y-%m-%d %H:%M:%S")
+        end_ts = end_ts.strftime("%Y-%m-%d %H:%M:%S")
 
-# Callback for updating gifs
-@app.callback([Output("satanim", "gif"),
-               Output("satanim", "still")],
-              [Input('interval-component', 'n_intervals')],
-              prevent_initial_call=True)
-def update_metrics(n):
-    
-    print("--------------------------")
-    print("ABOUT TO UPDATE GIF")
-    print("--------------------------")
+        data = VaisalaDashBoard(args[1], start_ts, end_ts)        
 
-    print(n)    
-
-    gif = "http://127.0.0.1:9900/satanim.gif?" + str(randint(100,999))
-    still = "http://127.0.0.1:9900/still.png?" + str(randint(100,999))
-        
-
-    return gif, still
-    
-    #if n%2==0:
-    #return "https://clima.lco.cl/casca/satanim.gif?4621460", app.get_asset_url('20240201220.png')
+        return dcc.send_data_frame(data.df.to_csv, f"{args[1]}-{start_ts}.csv")
 
 
