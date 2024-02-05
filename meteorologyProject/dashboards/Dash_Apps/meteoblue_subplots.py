@@ -14,6 +14,18 @@ df = MeteoBlueDashboard()
 
 df.generate_dash()
 
+toolbar_config = {"displayModeBar": True,
+                 "displaylogo": False,
+                 'modeBarButtonsToRemove': [
+                     'zoomin',
+                     'zoomout',
+                     'zoom',
+                     'pan2d',
+                     'autoScale2d',
+                     'resetScale2d',
+                     'lasso',
+                     'select2d']}
+
 #Create DjangoDash applicaiton
 app = DjangoDash(name='Meteoblue')
 
@@ -25,6 +37,7 @@ app.layout = html.Div([
                     dcc.Graph(id = 'weatherlco_plot',
                               figure=  df.fig,
                               animate = True, 
+                              config = toolbar_config,
                               style={"backgroundColor": "#FFF0F5"})                                                        
                     ])
 

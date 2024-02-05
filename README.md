@@ -12,12 +12,13 @@ information in a pandas dataframe. The data is displayed in dashboards using:
 Django, Dash and Ploty. To integrate all of these 3 technologies the project uses **django_plotly_dash**. All of this is done following the OOP paradigm, PEP 8 and the folder structures that Django gives.
 
 <p align="center">
-  <a href="#how-it-works">How it works •</a>
+  <a href="#how-it-works">How it works </a> •
   <a href="#getting-started">Getting Started</a> •
-  <a href="#installing">Installing •</a>   
-  <a href="#satellite-script">Satellite Script •</a>
-  <a href="#dash-gif-component">Dash Gif Component •</a>
-  <a href="#built-with">Built with </a>
+  <a href="#installing">Installing </a> •
+  <a href="#satellite-script">Satellite Script </a> •
+  <a href="#dash-gif-component">Dash Gif Component </a> •
+  <a href="#project-structure">Project Structure </a> •
+  <a href="#built-with">Built with </a> 
 </p>
 
 ## How it works
@@ -145,6 +146,50 @@ html.Div([
 callback. For adding this I had to recreate the custom component following [Dash Custom Components](https://dash.plotly.com/react-for-python-developers).
 
 If you want to check more about the changes I made to the component here: [Dash-Gif-Player](https://github.com/gabrielcarvajalfigueroa/Dash-Gif-Player).
+
+## Project Structure
+```
+├── README.md
+├── img                                   # Folder that contains imgs for README
+│   
+├── meteorologyProject                    # Django Project
+│   ├── celerybeat-schedule
+|   │   ├── dashboards                    # Django App
+│   │   ├── Dash_Apps
+│   │   │   ├── dashboards_components.py  # Contains classes for rendering plots
+│   │   │   ├── history_subplots.py       # Creates DjangoDash subplots for history data
+│   │   │   ├── meteoblue_subplots.py     # Creates DjangoDash for meteoblue
+│   │   │   └── meteorology_subplots.py   # Creates DjangoDash for stations data
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── migrations
+│   │   │   └── __init__.py
+│   │   ├── models.py
+│   │   ├── tasks.py
+│   │   ├── templates                     # Contains html files for the views 
+│   │   │   ├── allskycamera.html
+│   │   │   ├── history.html
+│   │   │   ├── index.html
+│   │   │   ├── meteoblue.html
+│   │   │   ├── navbar.html
+│   │   │   ├── otherResources.html
+│   │   │   └── webcams.html
+│   │   ├── tests.py
+│   │   ├── urls.py                       # Maps urls using the views
+│   │   └── views.py                      # Uses HttpResponse for render html files
+│   ├── db.sqlite3
+│   ├── logs.log
+│   ├── manage.py
+│   └── meteorologyProject                # Project subfolder
+│       ├── __init__.py
+│       ├── asgi.py
+│       ├── celery.py
+│       ├── settings.py
+│       ├── urls.py
+│       └── wsgi.py
+└── requirements.txt
+```
 
 ## Built With
 

@@ -40,6 +40,7 @@ app.layout = html.Div([
                     dcc.Dropdown(
                       id = 'station',
                       options = [{'label': i, 'value': i} for i in stations],
+                      clearable = False,
                       value = "Magellan",#Initial value for the dropdown
                       style={'width': '25%', 'margin':'0px auto'}),                
                     html.Button("Download CSV", id="btn_csv"),
