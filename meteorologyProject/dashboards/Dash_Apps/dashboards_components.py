@@ -104,11 +104,13 @@ class VaisalaDashBoard():
 
         df.dropna(subset=['temperature'], inplace=True)
 
-        self.fig_seeing = px.scatter(df, x=df['time'], y=df['temperature'])
+        self.fig_seeing = px.line(df, x=df['time'], y=df['temperature'])
 
         self.fig_seeing.update_yaxes(title_text="seeing")
         
         self.fig_seeing.update_xaxes(title_text="")
+        
+        self.fig_seeing.update_traces(line=dict(color="green", width=0.5))
 
         self.fig_seeing.update_layout(showlegend=False, 
                                       height=200,
@@ -143,7 +145,7 @@ class VaisalaDashBoard():
         # Temperature plot
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['temperature'], 
-                                 line=dict(color="red"),
+                                 line=dict(color="red", width=1),
                                  name="Temperature"),
                                  row=1,
                                  col=1,
@@ -152,7 +154,7 @@ class VaisalaDashBoard():
         # Dew Point
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['dp'], 
-                                 line=dict(color="purple"),
+                                 line=dict(color="purple", width=1),
                                  name="DewPoint"),
                                  row=1,
                                  col=1,
@@ -163,7 +165,7 @@ class VaisalaDashBoard():
         # Humidity plot
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['relative_humidity'],
-                                 line=dict(color="blue"), 
+                                 line=dict(color="blue", width=1), 
                                  name="Humidity"),
                                  row=1,
                                  col=1,
@@ -178,12 +180,12 @@ class VaisalaDashBoard():
                       secondary_y=True,
                       opacity= 0.4,
                       row=1,
-                      col=1)
+                      col=1)            
         
         # Wind plot
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['wind_speed_avg'], 
-                                 line=dict(color="green"),
+                                 line=dict(color="green", width=1),
                                  name="Wind"),
                                  row=2, 
                                  col=1)
@@ -201,7 +203,7 @@ class VaisalaDashBoard():
         # Air Pressure plot
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['temperature'], 
-                                 line=dict(color="black"),
+                                 line=dict(color="black", width=1),
                                  name="Pressure"),                                                                 
                                  row=3, 
                                  col=1)
@@ -209,7 +211,7 @@ class VaisalaDashBoard():
         # Wind Minimum plot
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['wind_speed_min'], 
-                                 line=dict(color="green"),
+                                 line=dict(color="green", width=1),
                                  name="WindMin"),
                                  row=2, 
                                  col=1)
@@ -217,7 +219,7 @@ class VaisalaDashBoard():
         # Wind Maximum plot
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['wind_speed_max'], 
-                                 line=dict(color="lightgreen"),
+                                 line=dict(color="lightgreen", width=1),
                                  name="WindMax"),
                                  row=2, 
                                  col=1)
@@ -436,9 +438,12 @@ class VaisalaDashBoard():
 
         self.fig_scattergl = go.Figure()
 
+        # the tail function obtains the last rows from a dataframe
+        last_100_rows = df.tail(100)        
+
         # Wind average direction plot
-        self.fig_scattergl.add_trace(go.Scatterpolargl(r = df.wind_speed_avg,
-                                        theta = df.wind_dir_avg,
+        self.fig_scattergl.add_trace(go.Scatterpolargl(r = last_100_rows.wind_speed_avg,
+                                        theta = last_100_rows.wind_dir_avg,
                                         name = "Wind AVG",
                                         mode = "markers",
                                         marker=dict(size=5, 
@@ -446,8 +451,8 @@ class VaisalaDashBoard():
                                         ))
         
         # Wind minimum direction plot
-        self.fig_scattergl.add_trace(go.Scatterpolargl(r = df.wind_speed_min,
-                                        theta = df.wind_dir_min,
+        self.fig_scattergl.add_trace(go.Scatterpolargl(r = last_100_rows.wind_speed_min,
+                                        theta = last_100_rows.wind_dir_min,
                                         name = "Wind MIN", 
                                         mode = "markers",
                                         marker=dict(size=7, 
@@ -456,8 +461,8 @@ class VaisalaDashBoard():
                                         ))
         
         # Wind maximum direction plot
-        self.fig_scattergl.add_trace(go.Scatterpolargl(r = df.wind_speed_max,
-                                        theta = df.wind_dir_max,
+        self.fig_scattergl.add_trace(go.Scatterpolargl(r = last_100_rows.wind_speed_max,
+                                        theta = last_100_rows.wind_dir_max,
                                         name = "Wind MAX",
                                         mode="markers",
                                         marker=dict(size=8, 
@@ -593,8 +598,6 @@ class MeteoBlueDashboard():
         cloud_types = ['Low Clouds', 'Mid Clouds', 'High Clouds']
         
         z = [df['lowclouds'].tolist(), df['midclouds'].tolist(),df['highclouds'].tolist()]
-
-        print(z)
 
         fig.add_trace(go.Heatmap(
                     z=z,

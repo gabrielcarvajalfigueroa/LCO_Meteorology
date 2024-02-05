@@ -32,7 +32,7 @@ def meteoblue(request):
     
     now = datetime.now()
 
-    now_string = "Forecast update: " + now.strftime("%Y-%m-%d %H:%M")
+    now_string = "Forecast update: " + now.strftime("%Y-%m-%d %H:%M") + " (UTC)"
 
     context = {
         'data' : now_string
