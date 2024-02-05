@@ -519,31 +519,93 @@ class MeteoBlueDashboard():
 
         df['time'] = df.index
 
-        df.dropna(subset=['temp'], inplace=True)
+        #df['dp'] = (237.7*(((17.27 * float(df['temp']))/(273.7 + float(df['temp']))) + ln(0.01 * float(df['relativehumidity']))))/(17.27-(((17.27 * float(df['temp']))/(273.7 + float(df['temp']))) + ln(0.01 * float(df['relativehumidity']))))
 
-        fig = make_subplots(rows=3, 
+        fig = make_subplots(rows=4, 
                             cols=1,
                             shared_xaxes=True,
                             vertical_spacing=0.02,                    
-                            specs=[[{"type": "xy"}],
-                                  [{"type": "xy", "secondary_y": True}],
-                                  [{"type": "xy"}]],)
+                            specs=[[{"type": "xy", "secondary_y": True}],
+                                  [{"type": "heatmap"}],
+                                  [{"type": "xy"}],
+                                  [{"type": "xy", "secondary_y": True}]],)
         
         
-        # Temperature plot
+        # Temperature plot - Graph 1
+        #temp
+        # felttemperature
+        # uvindex (bar chart)
+        # relativehumidity
+        # dewpoint - Pending
+
+        #Temperature
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['temp'], 
                                  name="Temperature"),
                                  row=1, 
-                                 col=1)
-
-        # Precipitation plot
-        fig.add_trace(go.Scatter(x=df['time'], 
-                                 y=df['precipitation_probability'], 
-                                 name="Precipitation"),
-                                 row=2, 
-                                 col=1)
+                                 col=1,
+                                 secondary_y=False)
         
+        # Felt temperature
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['felttemperature'], 
+                                 name="Felt Temperature"),
+                                 row=1, 
+                                 col=1,
+                                 secondary_y=False)
+        
+        # Relative Humidity
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['relativehumidity'],
+                                 line=dict(color="blue"), 
+                                 name="Humidity"),
+                                 row=1,
+                                 col=1,
+                                 secondary_y=True)
+        
+        # Uv Index
+        fig.add_trace(go.Bar(x=df['time'], 
+                                 y=df['uvindex'],                                 
+                                 name="UV-Index"),
+                                 row=1,
+                                 col=1,
+                                 secondary_y=True)
+        
+        '''
+        # Dew Point
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                y=df['dp'], 
+                                line=dict(color="purple"),
+                                name="DewPoint"),
+                                row=1,
+                                col=1,
+                                secondary_y=False)
+        '''
+
+        # ------- GRAPH - 2 -------------------
+        #sunshinetime
+        #visibility
+        #highclouds
+        #midclouds
+        #lowclouds
+        #totalcloudcover
+
+        cloud_types = ['Low Clouds', 'Mid Clouds', 'High Clouds']
+        
+        z = [df['lowclouds'].tolist(), df['midclouds'].tolist(),df['highclouds'].tolist()]
+
+        print(z)
+
+        fig.add_trace(go.Heatmap(
+                    z=z,
+                    x=df['time'],
+                    y=cloud_types,
+                    showscale=False,
+                    colorscale='Greys'),
+                    row=2,
+                    col=1)
+
+        # ------- GRAPH - 3 -------------------
         # Wind plot
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['windspeed'], 
@@ -551,11 +613,36 @@ class MeteoBlueDashboard():
                                  row=3, 
                                  col=1)
         
-        # Shows the name of the graph in y-axis
-        fig['layout']['yaxis']['title']='Temperature <br> °C'
-        #fig['layout']['yaxis2']['title']='Precipitation'
-        fig['layout']['yaxis3']['title']='(km/h)'
+       
+        # ------- GRAPH - 4 -------------------
+        #precipitation_probability
+        #snowfraction
+        #sealevelpressure
 
+        # Precipitation probability plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['precipitation_probability'], 
+                                 name="Precipitation %"),
+                                 row=4, 
+                                 col=1,
+                                 secondary_y=False)
+        
+        # Snow Fraction Plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['snowfraction'], 
+                                 name="Snow Fraction"),
+                                 row=4, 
+                                 col=1,
+                                 secondary_y=False)
+
+        # Precipitation probability plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['sealevelpressure'], 
+                                 name="Sea Level Pressure"),
+                                 row=4, 
+                                 col=1,
+                                 secondary_y=True)                
+        
         # Adds a dash line for the actual time
         now = datetime.now()
 
@@ -622,13 +709,14 @@ class MeteoBlueDashboard():
         Fills the precipitation subplot using the dataframe
         :rtype: None
         '''
-        self.fig.add_hrect(y0=0, 
-                           y1=1.2, 
-                           row=2, 
-                           col=1,                    
-                           fillcolor="brown", 
-                           opacity=0.65, 
-                           line_width=0.2)
+        
+        #self.fig.add_hrect(y0=0, 
+        #                   y1=1.2, 
+        #                   row=2, 
+        #                   col=1,                    
+        #                   fillcolor="brown", 
+        #                   opacity=0.65, 
+        #                   line_width=0.2)
     
     def fill_wind_subplot(self) -> None:
         '''
@@ -636,12 +724,16 @@ class MeteoBlueDashboard():
         :rtype: None
         '''
         df = self.df
-        fig = self.fig        
+        fig = self.fig
+
+        df['windspeed'] = pd.to_numeric(df['windspeed'])
+        top_limit = df['windspeed'].max()
         #This trace is por adding the wind direction
         fig.add_trace(go.Scatter(
                     x=df['time'],
-                    y=[7] * len(df),
+                    y=[float(top_limit) + 1] * len(df),
                     mode='markers',
+                    showlegend=False,
                     line=dict(color='blue'),
                     marker=dict(
                         color='blue',
@@ -656,19 +748,33 @@ class MeteoBlueDashboard():
         override the layout.
         :rtype: None
         '''
-
-        # y-axis text layout
-        self.fig.update_yaxes(title_text="Precipitation <br> (mm)",
-                         secondary_y=False,
-                         range=[0, 5],
-                         row=2,
+        self.fig.update_yaxes(title_text="DP,Temperature",
+                         secondary_y=False,                        
+                         range=[-40, 40],
+                         row=1,
                          col=1)
         
-        # y-axis text layout
-        self.fig.update_yaxes(title_text="(km/h)",
-                         secondary_y=False,
-                         row=2,
+        self.fig.update_yaxes(title_text="Humidity[%]",
+                         secondary_y=True,
+                         range=[0, 100],
+                         row=1,
                          col=1)
+        
+        self.fig.update_yaxes(title_text="Wind[km/h]",
+                         row=3,
+                         col=1)
+        
+        self.fig.update_yaxes(title_text="Precipitation[%]",
+                         row=4,
+                         col=1,
+                         secondary_y=False)
+
+        self.fig.update_yaxes(title_text="[hPa]",
+                         secondary_y=True,                         
+                         row=4,
+                         col=1)                         
+        # y-axis text layout
+        
 
         self.fig.update_layout(title_text="LCO <br><sup>20.01°S / 70.69°W (2365m asl)</sup>",
                                font_size = 15,
