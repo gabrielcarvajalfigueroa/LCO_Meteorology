@@ -79,8 +79,8 @@ app.layout = html.Div([
                             html.Div([
                                     gif.GifPlayer(
                                     id= 'redanim',                                    
-                                    gif=  "https://weather.lco.cl/casca/redanim.gif?3588110",#"http://127.0.0.1:8000/static//dpd/assets/dashboards/Dash_Apps/meteorology_subplots/satanim.gif"app.get_asset_url('redanim.gif'),  
-                                    still= "https://weather.lco.cl/casca/latestred.png",    
+                                    gif=  "https://clima.lco.cl/casca/redanim.gif?3588110",#"http://127.0.0.1:8000/static//dpd/assets/dashboards/Dash_Apps/meteorology_subplots/satanim.gif"app.get_asset_url('redanim.gif'),  
+                                    still= "https://clima.lco.cl/casca/latestred.png",    
                                     height = 340,                                
                                     width = 340
                                 )
