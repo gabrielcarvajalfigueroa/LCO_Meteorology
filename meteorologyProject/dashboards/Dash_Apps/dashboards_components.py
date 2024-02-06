@@ -479,7 +479,7 @@ class VaisalaDashBoard():
                                 polar = dict(
                                 bgcolor = "rgb(223, 223, 223)",
                                 angularaxis = dict(
-                                    linewidth = 3,
+                                    linewidth = 1,
                                     direction = "clockwise",
                                     rotation = 90,
                                     showline=True,
@@ -487,10 +487,14 @@ class VaisalaDashBoard():
                                 ),
                                 radialaxis = dict(
                                     side = "counterclockwise",
-                                    showline = True,
-                                    linewidth = 2,
-                                    gridcolor = "white",
-                                    gridwidth = 2,
+                                    angle = 65,
+                                    tickangle=90,
+                                    showline = False,
+                                    linewidth = 1,
+                                    gridcolor = "lightgray",
+                                    gridwidth = 1,
+                                    griddash="dash",
+                                    range=[0,50]
                                 )
                                 ),
                                 paper_bgcolor = "rgb(223, 223, 223)")
