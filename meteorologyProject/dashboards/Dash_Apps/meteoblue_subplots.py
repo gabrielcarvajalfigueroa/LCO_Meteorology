@@ -10,9 +10,9 @@ from .dashboards_components import MeteoBlueDashboard
 import os
 
 
-df = MeteoBlueDashboard()
+#df = MeteoBlueDashboard()
 
-df.generate_dash()
+#df.generate_dash()
 
 toolbar_config = {"displayModeBar": True,
                  "displaylogo": False,
@@ -33,11 +33,40 @@ app = DjangoDash(name='Meteoblue')
 # check: https://stackoverflow.com/questions/54192532/how-to-use-dash-callback-without-an-input
 #Configure app layout
 
-app.layout = html.Div([                             
-                    dcc.Graph(id = 'weatherlco_plot',
-                              figure=  df.fig,
-                              animate = True, 
+days = ["1 day", "3 days", "5 days"]
+
+app.layout = html.Div([
+
+                    dcc.Dropdown(
+                      id = 'days',
+                      options = [{'label': i, 'value': i} for i in days],
+                      clearable = False,
+                      value = "5 days",#Initial value for the dropdown
+                      style={'width': '25%', 'margin':'0px auto'}),
+
+                    dcc.Graph(id = 'meteoblue_plot',
+                              animate = False, 
                               config = toolbar_config,
                               style={"backgroundColor": "#FFF0F5"})                                                        
                     ])
+
+# Callback for updating stations plot
+@app.callback(
+               [Output('meteoblue_plot', 'figure')], #id of html component
+              [Input('days', 'value')]) #id of html component
+              
+def update_value(*args,**kwargs):
+    """
+    This function returns figure object according to value input
+    Input: Value specified
+    Output: Figure object
+    """
+    # args[0] = 1 days
+    # args[0][:1] = 1
+
+    df = MeteoBlueDashboard(args[0][:1])
+    
+    df.generate_dash()
+
+    return [df.fig]
 

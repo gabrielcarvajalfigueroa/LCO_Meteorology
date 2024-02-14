@@ -94,7 +94,7 @@ app.layout = html.Div([
                 Output('scattergl_plot', 'figure'),
                 Output('seeing_plot', 'figure')], #id of html component
               [Input('station', 'value'), Input('history-date-picker', 'date')],
-              prevent_initial_call=True) #id of html component
+              prevent_initial_call=False) #id of html component
               
 def update_value(*args,**kwargs):
     """
@@ -103,25 +103,54 @@ def update_value(*args,**kwargs):
     Output: Figure object
     """
     # args[0]: station value eg. Magellan
-    # args[1]: date selected eg. 2024-02-01 -> str    
+    # args[1]: date selected eg. 2024-02-01 -> str        
 
-    start_ts = datetime.strptime(args[1] + " 00:00:00", '%Y-%m-%d %H:%M:%S')
-
-    end_ts = start_ts + timedelta(days=1)
-
-    start_ts = start_ts.strftime("%Y-%m-%d %H:%M:%S")
-    end_ts = end_ts.strftime("%Y-%m-%d %H:%M:%S")
-
-    df = VaisalaDashBoard(args[0], start_ts, end_ts)
+    # Uses ctx to check if it is the first time the callback is displayed
+    # This is useful to display the first data when the page is called.
+    ctx = kwargs['callback_context']
     
-    df.generate_stations_plot()
+    if len(ctx.triggered) != 0:
 
-    df.generate_scattergl_plot()
+        start_ts = datetime.strptime(args[1] + " 00:00:00", '%Y-%m-%d %H:%M:%S')
 
-    df.generate_seeing_plot()
-    
-    return df.fig, df.fig_scattergl, df.fig_seeing
+        end_ts = start_ts + timedelta(days=1)
 
+        start_ts = start_ts.strftime("%Y-%m-%d %H:%M:%S")
+        end_ts = end_ts.strftime("%Y-%m-%d %H:%M:%S")
+
+        df = VaisalaDashBoard(args[0], start_ts, end_ts)
+        
+        df.generate_stations_plot()
+
+        df.generate_scattergl_plot()
+
+        df.generate_seeing_plot()
+        
+        return df.fig, df.fig_scattergl, df.fig_seeing
+
+    else:
+
+        # This is the logic to display the first data whichs is the one
+        # from the day before.
+
+        now = datetime.now() - timedelta(days=1)
+
+        start_ts = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        end_ts = start_ts + timedelta(days=1)
+
+        start_ts = start_ts.strftime("%Y-%m-%d %H:%M:%S")
+        end_ts = end_ts.strftime("%Y-%m-%d %H:%M:%S")        
+
+        df = VaisalaDashBoard(args[0], start_ts, end_ts)
+        
+        df.generate_stations_plot()
+
+        df.generate_scattergl_plot()
+
+        df.generate_seeing_plot()
+        
+        return df.fig, df.fig_scattergl, df.fig_seeing
 
 
 

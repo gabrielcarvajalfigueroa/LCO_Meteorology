@@ -72,27 +72,74 @@ class VaisalaDashBoard():
         TWL_Horizon:-18
         Pressure:760
         '''
+        now = datetime.now()
+
         LCO = ephem.Observer()
         LCO.lat = "-29.0110777"
         LCO.lon = "-70.700561"
         LCO.elevation = 2274
         LCO.horizon = "-1.4"
         LCO.pressure = float("760")
-        LCO.date = datetime.now() - timedelta(days=1)
+        LCO.date = datetime.now()
         
         sun = ephem.Sun()
         sunrise = ephem.localtime(LCO.next_rising(sun))
         sunset = ephem.localtime(LCO.next_setting(sun))
         LCO.horizon = "-18"
         twibeg = ephem.localtime(LCO.next_rising(sun))
-        twiend = ephem.localtime(LCO.next_setting(sun))
+        twiend = ephem.localtime(LCO.next_setting(sun))            
+
+        # -----------------------------------------------------
+        # Ephem string calculation: Do we plot old data or next?
+        # -----------------------------------------------------
         
+        isDay = False
+        isTwi = False
+
+        if sunset > now:
+            isDay = True
+            sunset = sunset - timedelta(days=1)
+
+        if sunrise > now:
+            sunrise = sunrise - timedelta(days=1)
+        else:
+            isDay = True
+        
+        if twibeg > now:
+            twibeg = twibeg - timedelta(days=1)
+        
+        if twiend > now:
+            if isDay == False:
+                isTwi = True
+            twiend = twiend - timedelta(days=1)
+
+        if isDay:
+            sun_event = sunset.strftime('%H:%M')
+            twi_event = twiend.strftime('%H:%M')
+            print("if1")
+        else:
+            if isTwi:
+                sun_event = sunrise.strftime('%H:%M')
+                twi_event = twiend.strftime('%H:%M')
+                print("if2")
+            else:
+                sun_event = sunrise.strftime('%H:%M')
+                twi_event = twibeg.strftime('%H:%M')
+                print("if3")
+
         sunrise_str = sunrise.strftime('%Y-%m-%d %H:%M:%S')
         sunset_str = sunset.strftime('%Y-%m-%d %H:%M:%S')
         twibeg_str = twibeg.strftime('%Y-%m-%d %H:%M:%S')
-        twiend_str = twiend.strftime('%Y-%m-%d %H:%M:%S')        
+        twiend_str = twiend.strftime('%Y-%m-%d %H:%M:%S')    
 
-        return [sunset_str, twiend_str, twibeg_str, sunrise_str]
+        print("now", now)
+        print(twiend > now)
+        print("sunset", sunset_str)
+        print("twiend", twiend_str)
+        print("twibeg", twibeg_str)
+        print("sunrise", sunrise_str)                    
+        
+        return [sunset_str, twiend_str, twibeg_str, sunrise_str, sun_event, twi_event]
 
 
 
@@ -121,9 +168,7 @@ class VaisalaDashBoard():
         df = self.df
 
         # DewPoint column calculation
-        #df['dp'] = df['temperature'] - ((100 - df['relative_humidity']) / 5)
-        
-
+        #df['dp'] = df['temperature'] - ((100 - df['relative_humidity']) / 5)       
         # trh = (((17.27 * df['temperature'])/(273.7 + df['temperature'])) + ln(0.01 * df['relative_humidity']))
         # dewpoint = (237.7*trh)/(17.27-trh)
         df['dp'] = (237.7*(((17.27 * df['temperature'])/(273.7 + df['temperature'])) + ln(0.01 * df['relative_humidity'])))/(17.27-(((17.27 * df['temperature'])/(273.7 + df['temperature'])) + ln(0.01 * df['relative_humidity'])))
@@ -258,6 +303,7 @@ class VaisalaDashBoard():
             latest_humidity = round(df['relative_humidity'].iloc[-1], 1)
             latest_dewpoint = round(df['dp'].iloc[-1], 1)
             latest_wind = round(df['wind_speed_avg'].iloc[-1], 1)
+            latest_gust = round(df['wind_speed_max'].iloc[-1], 1)
 
             avg_temp = round(df['temperature'].mean(), 1)
             avg_humidity = round(df['relative_humidity'].mean(), 1)
@@ -308,12 +354,22 @@ class VaisalaDashBoard():
                                 font_color="purple",
                                 showarrow=False)
             
+            # Annotation for Latest Gust
+            fig.add_annotation(text=f"Gusts: {latest_gust}",
+                                xref="paper", 
+                                yref="paper",
+                                x=0, 
+                                y=0.68,
+                                font_size=14,
+                                font_color="gray",
+                                showarrow=False)
+            
             # Annotation for Wind latest(average)
             fig.add_annotation(text=f"{latest_wind}({avg_wind})",
                                 xref="paper", 
                                 yref="paper",
                                 x=0, 
-                                y=0.7,
+                                y=0.6,
                                 font_size=20,
                                 font_color="green",
                                 showarrow=False)
@@ -356,7 +412,7 @@ class VaisalaDashBoard():
             fig.add_annotation(dict(x=0.99, y=0.3, ax=5, ay=0,
                                 xref = "paper", 
                                 yref = "paper", 
-                                text= f'Sun Event: {ephems[0][11:16]} - Twilight: {ephems[1][11:16]}'), 
+                                text= f'Sun Event: {ephems[4]} - Twilight: {ephems[5]}'), 
                                 textangle=-90,
                                 font_size=13)
 
@@ -504,14 +560,24 @@ class VaisalaDashBoard():
 class MeteoBlueDashboard():
     '''Class for MeteoBlue Dashboard generation'''
 
-    def __init__(self) -> None:
+    def __init__(self, days) -> None:
         '''
         Init instance.
         :rtype: None
         '''
-        m = dataclient.MeteoblueData.parameters()
+        m = dataclient.MeteoblueData.parameters(day=False)
 
         data = dataclient.DataService.get(m)
+        
+        start_ts = datetime.today()
+        end_ts = start_ts + timedelta(days=int(days))
+
+        start_ts = start_ts.strftime("%Y-%m-%d")
+        end_ts = end_ts.strftime("%Y-%m-%d")
+
+        # Filters the data depending on the days: 1, 3 or 5
+        data = data.loc[(data.index >= start_ts)
+                     & (data.index < end_ts)]
 
         self.df= data
         self.fig = None #This is the plotly figure to display
@@ -528,7 +594,13 @@ class MeteoBlueDashboard():
 
         df['time'] = df.index
 
-        #df['dp'] = (237.7*(((17.27 * float(df['temp']))/(273.7 + float(df['temp']))) + ln(0.01 * float(df['relativehumidity']))))/(17.27-(((17.27 * float(df['temp']))/(273.7 + float(df['temp']))) + ln(0.01 * float(df['relativehumidity']))))
+        # It is neccesary to convert to float64 the columns otherwise the dew point 
+        # calculation won't work
+        df['temp'] = df['temp'].astype(float)
+        df['relativehumidity'] = df['relativehumidity'].astype(float)
+        
+        # Dew Point Column calculation
+        df['dp'] = (237.7*(((17.27 * df['temp'])/(273.7 + df['temp'])) + ln(0.01 * df['relativehumidity'])))/(17.27-(((17.27 * df['temp'])/(273.7 + df['temp'])) + ln(0.01 * df['relativehumidity'])))
 
         fig = make_subplots(rows=4, 
                             cols=1,
@@ -541,7 +613,7 @@ class MeteoBlueDashboard():
         
         
         # Temperature plot - Graph 1
-        #temp
+        # temp
         # felttemperature
         # uvindex (bar chart)
         # relativehumidity
@@ -550,6 +622,7 @@ class MeteoBlueDashboard():
         #Temperature
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['temp'], 
+                                 line_width=1,
                                  name="Temperature"),
                                  row=1, 
                                  col=1,
@@ -558,6 +631,7 @@ class MeteoBlueDashboard():
         # Felt temperature
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['felttemperature'], 
+                                 line_width=1,
                                  name="Felt Temperature"),
                                  row=1, 
                                  col=1,
@@ -566,6 +640,7 @@ class MeteoBlueDashboard():
         # Relative Humidity
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['relativehumidity'],
+                                 line_width=1,
                                  line=dict(color="blue"), 
                                  name="Humidity"),
                                  row=1,
@@ -579,17 +654,15 @@ class MeteoBlueDashboard():
                                  row=1,
                                  col=1,
                                  secondary_y=True)
-        
-        '''
+                
         # Dew Point
         fig.add_trace(go.Scatter(x=df['time'], 
                                 y=df['dp'], 
-                                line=dict(color="purple"),
+                                line=dict(color="purple", width=1),
                                 name="DewPoint"),
                                 row=1,
                                 col=1,
-                                secondary_y=False)
-        '''
+                                secondary_y=False)        
 
         # ------- GRAPH - 2 -------------------
         #sunshinetime
@@ -601,7 +674,7 @@ class MeteoBlueDashboard():
 
         cloud_types = ['Low Clouds', 'Mid Clouds', 'High Clouds']
         
-        z = [df['lowclouds'].tolist(), df['midclouds'].tolist(),df['highclouds'].tolist()]
+        z = [df['lowclouds'].tolist(), df['midclouds'].tolist(), df['highclouds'].tolist()]
 
         fig.add_trace(go.Heatmap(
                     z=z,
@@ -626,25 +699,30 @@ class MeteoBlueDashboard():
         #snowfraction
         #sealevelpressure
 
+        # Snow Fraction Plot
+        fig.add_trace(go.Scatter(x=df['time'], 
+                                 y=df['snowfraction'], 
+                                 line_width=1,
+                                 name="Snow Fraction"),
+                                 row=4, 
+                                 col=1,
+                                 secondary_y=False)
+        
         # Precipitation probability plot
         fig.add_trace(go.Scatter(x=df['time'], 
-                                 y=df['precipitation_probability'], 
+                                 y=df['precipitation_probability'],
+                                 line_width=1, 
                                  name="Precipitation %"),
                                  row=4, 
                                  col=1,
                                  secondary_y=False)
         
-        # Snow Fraction Plot
-        fig.add_trace(go.Scatter(x=df['time'], 
-                                 y=df['snowfraction'], 
-                                 name="Snow Fraction"),
-                                 row=4, 
-                                 col=1,
-                                 secondary_y=False)
+        
 
         # Precipitation probability plot
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['sealevelpressure'], 
+                                 line_width=1,
                                  name="Sea Level Pressure"),
                                  row=4, 
                                  col=1,
@@ -673,6 +751,24 @@ class MeteoBlueDashboard():
         df= self.df
         fig = self.fig
 
+        df_2 = df.groupby(pd.Grouper(freq='1D')).agg({'temp': ['min', 'idxmin', 'max', 'idxmax']}).dropna()        
+
+        for index, row in df_2['temp'].iterrows():
+            #Adds the maximum value for temperature
+            fig.add_annotation(x=row['idxmax'],
+                            y=row['max'] + 3 ,
+                            text=row['max'],
+                            showarrow=False,
+                            row=1,
+                            col=1)
+            #Adds the minimum value for temperature
+            fig.add_annotation(x=row['idxmin'],
+                            y=row['min'],
+                            showarrow=True,
+                            text=row['min'],
+                            row=1,
+                            col=1)
+        
         df['time_aux'] = df['time']
         # Following code explanation
         # check: https://stackoverflow.com/questions/63731256/how-to-show-ranges-of-repeated-values-in-a-colum-in-python-pandas
@@ -685,7 +781,7 @@ class MeteoBlueDashboard():
         max_temp = self.df.loc[self.df['temp'].idxmax()]
         min_temp = self.df.loc[self.df['temp'].idxmin()]    
 
-        #print(max_temp, "max temp es")
+        #print(max_temp, "max temp es")        
 
         for index, row in df.iterrows():
             if row['isdaylight']:            
@@ -695,22 +791,12 @@ class MeteoBlueDashboard():
                 fig.add_vrect(x0=x_axis[0], x1=x_axis[1], row="all", col=1,
                         annotation_text="", annotation_position="top left",
                         fillcolor="yellow", opacity=0.25, line_width=0.2)
-                #Adds the maximum value for temperature
-                fig.add_annotation(x=max_temp['time_aux'],
-                                y=max_temp['temp'],
-                                text=max_temp['temp'],
-                                showarrow=True,
-                                row=1,
-                                col=1)
-                #Adds the minimum value for temperature
-                fig.add_annotation(x=min_temp['time_aux'],
-                                y=min_temp['temp'],
-                                showarrow=True,
-                                text=min_temp['temp'],
-                                row=1,
-                                col=1)
                 
                 
+        
+        
+
+
     def fill_precipitation_subplot(self) -> None:
         '''
         Fills the precipitation subplot using the dataframe
@@ -744,7 +830,7 @@ class MeteoBlueDashboard():
                     line=dict(color='blue'),
                     marker=dict(
                         color='blue',
-                        size=20,
+                        size=10,
                         symbol='arrow',
                         angle=df['winddirection']
         )), row=3, col=1)
@@ -781,12 +867,14 @@ class MeteoBlueDashboard():
                          row=4,
                          col=1)                         
         # y-axis text layout
+
+        #self.fig.update_xaxes(range=["2024-02-14 00:00:00", "2024-02-18 00:00:00"])
         
 
         self.fig.update_layout(title_text="LCO <br><sup>20.01°S / 70.69°W (2365m asl)</sup>",
                                font_size = 15,
                                height=700,
-                               showlegend = True,
+                               showlegend = False,
                                paper_bgcolor = "rgb(223, 223, 223)",
                                autotypenumbers='convert types')
         
