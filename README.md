@@ -78,54 +78,6 @@ $ cd ./meteorologyProject
 $ python3 manage.py runserver
 ```
 
-## Satellite Script
-
-This application also handles the creation of a gif to display satellital data of the weather around
-Chile. This script can create the gif every certain amount of time, this is achieved by using celery.
-
-To accomplish this the app uses celery beat who acts as broker for invoking the script when defined.
-
-Once the Django app is up you can start the **worker** with the following:
-
-``` bash
-# Start the celery worker
-$ celery -A meteorologyProject worker -l info
-```
-
-Now you can start the **broker** for invoking the script:
-
-``` bash
-# Start the celery broker
-$ celery -A meteorologyProject beat -l info -S django_celery_beat.schedulers:DatabaseScheduler
-```
-
-It is important that in `settings.py` you have the configuration with the following structure:
-
-``` bash
-# Celery settings
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
-CELERY_TIMEZONE = TIME_ZONE
-CELERY_RESULT_BACKEND = 'django-db'
-CELERY_RESULT_EXTENDED = True
-
-# Celery Beat settings
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-
-CELERY_BEAT_SCHEDULE = {
-     'create_gif':{
-         'task':'dashboards.tasks.create_gif',
-         'schedule': 120 # Sets the script to be invoked every 120 seconds
-         }
-}
-``` 
-
-Regarding the script, it basically uses web-scraping for downloading images from a public site, converts
-them in a gif and finally stores it in the app.
-
-The script also saves the downloaded images in folders but only allowing "x" amount of folders which can be setted in `config.ini`. 
-
-For more information regarding the functionality of the script check: [Python Script](https://github.com/gabrielcarvajalfigueroa/Satellite_gifmaker/blob/main/main.py)
-
 ## Dash Gif Component
 
 For adding the functionality of having a Gif that you can pause and play this app uses a custom dash component
@@ -134,12 +86,13 @@ python class so it can be called within `meteorology_subplots.py` like this:
 
 ``` bash
 html.Div([
-          gif.GifPlayer( 
-              id='satanim',
-              gif= app.get_asset_url('satanim.gif'),
-              still= app.get_asset_url('20240201220.png')
-      )
-      ], style={'grid-column-start': '3', 'grid-row-start': '1', 'grid-row-end': '3'}),
+          gif.GifPlayer(
+          id= 'redanim',                                    
+          gif=  "https://clima.lco.cl/casca/redanim.gif?3588110",
+          still= "https://clima.lco.cl/casca/latestred.png",    
+          height = 340,                                
+          width = 340
+)], style={'grid-column-start': '2', 'grid-row-start': '3', 'margin-left': 'auto', 'margin-right': 'auto'}),
 ```
 
 [This component](https://github.com/mbkupfer/dash-gif-component) was not created by me, but I had to add the `id` attribute otherwise you can not call it in a 
@@ -164,15 +117,14 @@ If you want to check more about the changes I made to the component here: [Dash-
 │   │   ├── admin.py
 │   │   ├── apps.py
 │   │   ├── migrations
-│   │   │   └── __init__.py
 │   │   ├── models.py
-│   │   ├── tasks.py
 │   │   ├── templates                     # Contains html files for the views 
 │   │   │   ├── allskycamera.html
 │   │   │   ├── history.html
 │   │   │   ├── index.html
 │   │   │   ├── meteoblue.html
 │   │   │   ├── navbar.html
+│   │   │   ├── nightlyskymovie.html
 │   │   │   ├── otherResources.html
 │   │   │   └── webcams.html
 │   │   ├── tests.py
@@ -184,7 +136,6 @@ If you want to check more about the changes I made to the component here: [Dash-
 │   └── meteorologyProject                # Project subfolder
 │       ├── __init__.py
 │       ├── asgi.py
-│       ├── celery.py
 │       ├── settings.py
 │       ├── urls.py
 │       └── wsgi.py
@@ -200,7 +151,6 @@ Plotly Dash applications served up in Django templates using tags.
 * [Plotly](https://plotly.com/) - Used to generate the graphs.
 * [lcodataclient]() - Module for obtaining the data in dataframes.
 * [Pandas](https://pandas.pydata.org/) - Used to manipulate the dataframes.
-* [Celery](https://docs.celeryq.dev/en/stable/django/first-steps-with-django.html) - Used for task scheduling
 
 
 ## Author

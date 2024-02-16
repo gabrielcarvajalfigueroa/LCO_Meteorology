@@ -18,3 +18,6 @@ logs.log
 static/
 
 staticfiles/
+
+# Sqlite database
+db.sqlite3
