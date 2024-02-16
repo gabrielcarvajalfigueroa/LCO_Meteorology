@@ -1,10 +1,9 @@
 <!-- Renders the navbar -->
 {% include 'navbar.html'%}
 
-<!-- Renders History plotly app 
-{% load plotly_dash %}
-{% plotly_app name="History" ratio=0.43 %}
--->
+<!-- Renders History plotly app -->
+<!-- It's neccesary to add the the container_iframe to 
+    ensure that the plotly app will fully display-->
 
 {% load plotly_dash %}
 <div id="container_iframe">
@@ -17,3 +16,6 @@
         width: 1840px!important  ;
     }
 </style>
+
+
+  

@@ -1,3 +1,5 @@
+<!--This HTML renders the navbar to the include it in every other HTML-->
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -12,7 +14,6 @@
         <link rel="Shortcut Icon" type="image/x-icon" href="http://www.lco.cl/wp-content/uploads/2020/01/CS_lascamp_logo_horz-LCO-2.png" />
         <script src="https://clima.lco.cl/js/jquery-3.5.1.min.js"></script>
         <script src="https://clima.lco.cl/js/bootstrap.js"></script>
-        <!--<script type="text/javascript" src="https://weather.lco.cl/index.js"></script>-->
     </head>
     <body>
     <div class="container-fluid" style="font-family: Lato;font-weight: 700">
@@ -58,6 +59,7 @@
                         <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLinkAllSky">
                             <a class="dropdown-item" href="{% url 'allskycamera' %}">All-Sky Camera Red/Blue Filter</a>                            
                             <a class="dropdown-item" href="{% url 'webcams' %}">Cardinal Points Webcams</a>
+                            <a class="dropdown-item" href="{% url 'nightlyskymovie' %}">Nightly All-Sky Movie</a>
                         </div>
                     </li>
                     <li class="nav-item dropdown">

@@ -40,8 +40,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'dashboards',
-    "django_celery_beat",
-    'django_celery_results',
     'django_plotly_dash.apps.DjangoPlotlyDashConfig',
 
     'dpd_static_support',
@@ -162,23 +160,3 @@ PLOTLY_COMPONENTS = [
 #Add X_FRAME_OPTIONS = 'SAMEORIGIN' to settings.py to enable frames within HTML documents
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
-# Celery settings
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/0" #"redis://%s:6379" % (os.environ.get("REDIS_HOST", "127.0.0.1"))
-#CELERY_RESULT_BACKEND = "redis://%s:6379" % (os.environ.get("REDIS_HOST", "127.0.0.1"))
-#CELERY_CACHE_BACKEND = "redis://%s:6379" % (os.environ.get("REDIS_HOST", "127.0.0.1"))
-#CELERY_ACCEPT_CONTENT = ["application/json"]
-#CELERY_TASK_SERIALIZER = "json"
-#CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = TIME_ZONE
-CELERY_RESULT_BACKEND = 'django-db'
-CELERY_RESULT_EXTENDED = True
-
-# Celery Beat settings
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-
-CELERY_BEAT_SCHEDULE = {
-     'create_gif':{
-         'task':'dashboards.tasks.create_gif',
-         'schedule': 120
-         }
-}

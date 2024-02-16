@@ -1,0 +1,11 @@
+<!-- Renders the navbar -->
+{% include 'navbar.html'%}
+
+<!-- Renders the daily Nigthly all-sky video-->
+<div style="font-family:sans-serif; font-size:1.1em; margin-top:20px; margin-left: 5px;">
+    The nightly all-sky movie is updated &amp; available each day at 12 UT.
+</div>
+
+<video controls="controls" width="800" height="600" name="NigthlySky movie">
+    <source src="http://clima.lco.cl/casca/daily_r.mov">
+</video>

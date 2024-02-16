@@ -1,24 +1,16 @@
-from os import name
 import dash_core_components as dcc
-from dash import html, callback_context
+from dash import html
 from dash.dependencies import Input, Output
-import plotly.graph_objs as go
 from django_plotly_dash import DjangoDash
-import pandas as pd
 from datetime import datetime, timedelta
-from .dashboards_components import VaisalaDashBoard, Dummyrender, MeteoBlueDashboard
-from random import randint
-
+from .dashboards_components import VaisalaDashBoard
 
 import gif_player as gif
 
-
+# Stations to Display
 stations = ["Magellan", "DuPont", "C40"]
 
-now = datetime.now() - timedelta(days=1)
-
-now_string = now.strftime("%Y-%m-%d  %H:%M:%S")
-
+# Toolbar that comes with the Plotly Graph
 toolbar_config = {"displayModeBar": True,
                  "displaylogo": False,
                  'modeBarButtonsToRemove': [
@@ -31,77 +23,72 @@ toolbar_config = {"displayModeBar": True,
                      'lasso',
                      'select2d']}
 
-#Create DjangoDash applicaiton
+#Create DjangoDash application
 app = DjangoDash(name='Subplots')
 
 app.layout = html.Div([
 
-            #Add dropdown for option selection
+                    #Add dropdown for option selection
                     dcc.Dropdown(
                       id = 'station',
                       options = [{'label': i, 'value': i} for i in stations],
                       clearable = False,
                       value = "Magellan",#Initial value for the dropdown
-                      style={'width': '25%', 'margin':'0px auto'}),                
+                      style={'width': '25%', 'margin':'0px auto'}),  
+
+                    # Button for Downloading CSV
                     html.Button("Download CSV", id="btn_csv"),                    
-                    dcc.Download(id="download-dataframe-csv"),                         
-                    dcc.Interval(id='interval-component',
-                                 interval= 5 * 60000, # every 5 minutes,
-                                 n_intervals=0
-                             ),
+
+                    # This components sends the requested data
+                    dcc.Download(id="download-dataframe-csv"),                    
+
+                    # Live update component for updating the graphs each minute
                     dcc.Interval(id='interval-component-update',
-                        interval= 1 * 60000, # every 5 minutes,
+                        interval= 1 * 60000, # every 1 minute,
                         n_intervals=0
                     ),
             html.Div([
+                    html.Div([ 
+                        dcc.Graph(id = 'seeing_plot', 
+                                animate = False,
+                                config=toolbar_config,
+                                style={"backgroundColor": "#FFF0F5"}),
+                    ], style={'grid-column-start': '1', 'grid-row-start': '1'}),
 
-                            html.Div([ 
-                                dcc.Graph(id = 'seeing_plot', 
-                                        animate = False,
-                                        config=toolbar_config,
-                                        style={"backgroundColor": "#FFF0F5"}),
-                            ], style={'grid-column-start': '1', 'grid-row-start': '1'}),
+                    html.Div([
+                        dcc.Graph(id = 'station_plot',
+                                animate = False, 
+                                config=toolbar_config,
+                                style={"backgroundColor": "#FFF0F5"}),
+                    ], style={'grid-column-start': '1', 'grid-row-start': '2', 'grid-row-end': 'span 2'}),
 
-                            html.Div([
-                                dcc.Graph(id = 'station_plot',
-                                        animate = False, 
-                                        config=toolbar_config,
-                                        style={"backgroundColor": "#FFF0F5"}),
-                            ], style={'grid-column-start': '1', 'grid-row-start': '2', 'grid-row-end': 'span 2'}),
+                    html.Div([
+                        dcc.Graph(id = 'scattergl_plot',
+                                animate = False, 
+                                config=toolbar_config,
+                                style={"backgroundColor": "#FFF0F5"}),
+                    ], style={'grid-column-start': '2', 'grid-row-start': '1', 'grid-row-end': 'span 2'}),
 
-                            html.Div([
-                                dcc.Graph(id = 'scattergl_plot',
-                                        animate = False, 
-                                        config=toolbar_config,
-                                        style={"backgroundColor": "#FFF0F5"}),
-                            ], style={'grid-column-start': '2', 'grid-row-start': '1', 'grid-row-end': 'span 2'}),
+                    html.Div([
+                            gif.GifPlayer(
+                            id= 'redanim',                                    
+                            gif=  "https://clima.lco.cl/casca/redanim.gif?3588110",
+                            still= "https://clima.lco.cl/casca/latestred.png",    
+                            height = 340,                                
+                            width = 340
+                        )
+                    ], style={'grid-column-start': '2', 'grid-row-start': '3', 'margin-left': 'auto', 'margin-right': 'auto'}),
 
-                            html.Div([
-                                    gif.GifPlayer(
-                                    id= 'redanim',                                    
-                                    gif=  "https://clima.lco.cl/casca/redanim.gif?3588110",#"http://127.0.0.1:8000/static//dpd/assets/dashboards/Dash_Apps/meteorology_subplots/satanim.gif"app.get_asset_url('redanim.gif'),  
-                                    still= "https://clima.lco.cl/casca/latestred.png",    
-                                    height = 340,                                
-                                    width = 340
-                                )
-                            ], style={'grid-column-start': '2', 'grid-row-start': '3', 'margin-left': 'auto', 'margin-right': 'auto'}),
-
-                            html.Div([
-                                html.Iframe(
-                                    src="https://www.meteoblue.com/en/weather/maps/widget/LCO_-29.014N-70.693E2365_UTC?windAnimation=0&gust=0&satellite=0&satellite=1&cloudsAndPrecipitation=0&temperature=0&sunshine=0&extremeForecastIndex=0&geoloc=fixed&tempunit=C&windunit=km%252Fh&lengthunit=metric&zoom=5&autowidth=auto",
-                                    width=680,
-                                    height=680
-                                )
-                            ], style={'grid-column-start': '3', 'grid-row-start': '1', 'grid-row-end': 'span 3'}),
-
-                            html.Div(id="gifdiv"),
-
-                            
+                    html.Div([
+                        html.Iframe(
+                            src="https://www.meteoblue.com/en/weather/maps/widget/LCO_-29.014N-70.693E2365_UTC?windAnimation=0&gust=0&satellite=0&satellite=1&cloudsAndPrecipitation=0&temperature=0&sunshine=0&extremeForecastIndex=0&geoloc=fixed&tempunit=C&windunit=km%252Fh&lengthunit=metric&zoom=5&autowidth=auto",
+                            width=680,
+                            height=680
+                        )
+                    ], style={'grid-column-start': '3', 'grid-row-start': '1', 'grid-row-end': 'span 3'}),
 
             ], style={'display': 'grid', 'grid-template-columns': '800px 340px 1fr', 'grid-template-rows': '180px 160px 1fr'}),
-
 ])
-
 
 
 # Callback for updating stations plot
@@ -118,8 +105,6 @@ def update_value(*args,**kwargs):
     Output: Figure object
     """
 
-    print("---- About to Update ----", args[0])
-
     df = VaisalaDashBoard(args[0])
     
     df.generate_stations_plot()
@@ -131,8 +116,6 @@ def update_value(*args,**kwargs):
     return df.fig, df.fig_scattergl, df.fig_seeing
 
 
-
-
 # Callback for downloading csv 
 @app.callback(
     Output("download-dataframe-csv", "data"),
@@ -141,12 +124,12 @@ def update_value(*args,**kwargs):
     prevent_initial_call=True)
 
 def func(*args,**kwargs):
-    #
-    #This function is responsible to download the csv but ONLY when the button
-    #is clicked, without this function the code downloads the csv when changing
-    #the dropdown or when the button is clicked because of how dash app callback 
-    #inputs works.
-    #
+    """
+    This function is responsible to download the csv but ONLY when the button
+    is clicked, without this function the code downloads the csv when changing
+    the dropdown or when the button is clicked because of how dash app callback 
+    inputs works.
+    """
     
     
     # In Django_plotly_dash is necessary to use kwargs otherwise it wont work
@@ -162,30 +145,8 @@ def func(*args,**kwargs):
         # args[1]: station.value
         data = VaisalaDashBoard(args[1])
 
-        return dcc.send_data_frame(data.df.to_csv, f"{args[1]}-{now_string}.csv")
+        now = datetime.now() - timedelta(days=1)
 
-'''
-# Callback for updating gifs
-@app.callback([Output("satanim", "gif"),
-               Output("satanim", "still")],
-              [Input('interval-component', 'n_intervals')],
-              prevent_initial_call=True)
-def update_metrics(n):
-    
-    print("--------------------------")
-    print("ABOUT TO UPDATE GIF")
-    print("--------------------------")
+        now_string = now.strftime("%Y-%m-%d  %H:%M:%S")
 
-    print(n)    
-
-    gif = "http://127.0.0.1:9900/satanim.gif?" + str(randint(100,999))
-    still = "http://127.0.0.1:9900/still.png?" + str(randint(100,999))
-        
-
-    return gif, still
-    
-    #if n%2==0:
-    #return "https://clima.lco.cl/casca/satanim.gif?4621460", app.get_asset_url('20240201220.png')
-
-
-'''
+        return dcc.send_data_frame(data.df.to_csv, f"{args[1]}-{now_string[:10]}.csv")

@@ -2,10 +2,9 @@
 <!-- Renders the navbar -->
 {% include 'navbar.html'%}
 
-<!-- Renders the plotly app
-{% load plotly_dash %}
-{% plotly_app name="Subplots" ratio=0.43 %}   
--->
+<!-- Renders the Plotly App-->
+<!-- It's neccesary to add the the container_iframe to 
+    ensure that the plotly app will fully display-->
 
 {% load plotly_dash %}
 <div id="container_iframe">
