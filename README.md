@@ -139,7 +139,7 @@ To use this package do:
 
 And do not forget to reference it in your `settings.py`:
 
-```
+``` py
 . . .
 
 #Add PLOTLY_COMPONENTS
