@@ -72,6 +72,26 @@ class VaisalaDashBoard():
             
     def get_ephems(self) -> list:
         '''
+        Uses ephem library to obtain dates for sunset, twilightend,
+        twilightbegin and sunrise. 
+        
+        And also returns the next sunevent and twilight
+        to display in the graph. 
+
+        All of the data is returned in a list with the following order
+        considering that the list is called ephem.
+
+        ephem[0]: sunset
+        ephem[1]: twiend
+        ephem[2]: twibeg
+        ephem[3]: sunrise
+        ephem[4]: sun_event
+        ephem[5]: twi_event
+
+        :rtype: list
+        '''
+
+        '''
         [LCO]
         Latitude:-29.0110777
         Longitude:-70.700561
@@ -89,7 +109,7 @@ class VaisalaDashBoard():
         LCO.horizon = "-1.4"
         LCO.pressure = float("760")
         
-        if int(now.strftime("%H")) >= 16:
+        if int(now.strftime("%H")) >= 13:
             LCO.date = datetime.now()  
         else:
             LCO.date = datetime.now() - timedelta(days=1)
@@ -127,8 +147,8 @@ class VaisalaDashBoard():
             twibeg = twibeg - timedelta(days=1)
         
         if twiend > now:
-            if isDay == False:
-                isTwi = True
+            isDay = False
+            isTwi = True
             twiend = twiend - timedelta(days=1)
 
         print("isDay", isDay)
@@ -388,6 +408,7 @@ class VaisalaDashBoard():
                                 font_size=20,
                                 font_color="green",
                                 showarrow=False)
+            
             # -------------------------------
             #       Lines for ephemeris
             # -------------------------------
@@ -423,7 +444,6 @@ class VaisalaDashBoard():
                         line_color="lightblue")
             
             # Annotation for Sun event and Twilight
-            # [11:16] is for slicing the string to get HH:MM
             self.fig.add_annotation(dict(x=0.99, y=0.3, ax=5, ay=0,
                                 xref = "paper", 
                                 yref = "paper", 
@@ -449,8 +469,7 @@ class VaisalaDashBoard():
             # - High Humidity: If last humidity is >= 80
             # - Danger of Precipitation: If |last_temperature - last_dewpoint)| < 2.0
 
-            if latest_wind >= 35:            
-                # Annotation for Wind latest(average)
+            if latest_wind >= 35:
                 self.fig.add_annotation(text="Note: High Wind",
                                     xref="paper", 
                                     yref="paper",
@@ -482,7 +501,7 @@ class VaisalaDashBoard():
 
         else:
             # Annotation for history time, displays the day selected to plot
-            # eg. 2024-
+            # eg. 2024-02-16
             self.fig.add_annotation(text=self.history_start[:10],
                                 xref="paper", 
                                 yref="paper",
@@ -492,6 +511,7 @@ class VaisalaDashBoard():
                                 font_color="grey",
                                 showarrow=False)            
         
+        # Updates layout for stations figure
         self.fig.update_layout( font_size = 10, 
                                 height=500,
                                 margin=dict(l=20, r=20, t=20, b=20),
@@ -499,11 +519,12 @@ class VaisalaDashBoard():
                                 showlegend = False,                                
                                 paper_bgcolor = "rgb(223, 223, 223)")
 
-    def generate_scattergl_plot(self) -> None:                      
+    def generate_scattergl_plot(self) -> None:
 
         self.fig_scattergl = go.Figure()
 
         # the tail function obtains the last rows from a dataframe
+        # To display the latest data
         last_100_rows = self.df.tail(100)        
 
         # Wind average direction plot
@@ -542,14 +563,14 @@ class VaisalaDashBoard():
                                 autotypenumbers='convert types',
                                 showlegend = False,
                                 polar = dict(
-                                bgcolor = "rgb(223, 223, 223)",
-                                angularaxis = dict(
-                                    linewidth = 1,
-                                    direction = "clockwise",
-                                    rotation = 90,
-                                    showline=True,
-                                    linecolor='black'
-                                ),
+                                    bgcolor = "rgb(223, 223, 223)",
+                                    angularaxis = dict(
+                                        linewidth = 1,
+                                        direction = "clockwise",
+                                        rotation = 90,
+                                        showline=True,
+                                        linecolor='black'
+                                    ),
                                 radialaxis = dict(
                                     side = "counterclockwise",
                                     angle = 65,
@@ -584,7 +605,7 @@ class MeteoBlueDashboard():
         start_ts = start_ts.strftime("%Y-%m-%d")
         end_ts = end_ts.strftime("%Y-%m-%d")
 
-        # Filters the data depending on the days: 1, 3 or 5
+        # Filters the data depending on the days: 1, 3 or 4
         data = data.loc[(data.index >= start_ts)
                      & (data.index < end_ts)]
 
@@ -593,8 +614,8 @@ class MeteoBlueDashboard():
 
     def create_subplots(self) -> None:
         '''
-        Creates a subplot with 3 scatter plots to display Temperature, 
-        Precipitation, Wind and WindDirection.
+        Creates a subplot with 3  plots to display Temperature, 
+        Cloud Coverage, Wind and SealevelPressure with Precipitation %.
         :rtype = None
         '''
         df = self.df
@@ -620,13 +641,15 @@ class MeteoBlueDashboard():
                                   [{"type": "xy"}],
                                   [{"type": "xy", "secondary_y": True}]],)
         
-        
-        # Temperature plot - Graph 1
-        # temp
-        # felttemperature
-        # uvindex (bar chart)
-        # relativehumidity
-        # dewpoint - Pending
+        # ------------------------------------
+        # --------- GRAPH - 1 ----------------
+        # ------------------------------------
+        # Displays:
+        #   - temp
+        #   - felttemperature
+        #   - uvindex (bar chart)
+        #   - relativehumidity
+        #   - dewpoint
 
         #Temperature
         fig.add_trace(go.Scatter(x=df['time'], 
@@ -673,13 +696,13 @@ class MeteoBlueDashboard():
                                 col=1,
                                 secondary_y=False)        
 
-        # ------- GRAPH - 2 -------------------
-        #sunshinetime
-        #visibility
-        #highclouds
-        #midclouds
-        #lowclouds
-        #totalcloudcover
+        # ------------------------------------
+        # --------- GRAPH - 2 ----------------
+        # ------------------------------------
+        # Displays:
+        #   - highclouds
+        #   - midclouds
+        #   - lowclouds        
 
         cloud_types = ['Low Clouds', 'Mid Clouds', 'High Clouds']
         
@@ -696,19 +719,44 @@ class MeteoBlueDashboard():
                     row=2,
                     col=1)
 
-        # ------- GRAPH - 3 -------------------
-        # Wind plot
+        # ------------------------------------
+        # --------- GRAPH - 3 ----------------
+        # ------------------------------------
+        # Displays:
+        #   - Wind plot
+
         fig.add_trace(go.Scatter(x=df['time'], 
                                  y=df['windspeed'], 
                                  name="Wind"),
                                  row=3, 
                                  col=1)
         
-       
-        # ------- GRAPH - 4 -------------------
-        #precipitation_probability
-        #snowfraction
-        #sealevelpressure
+        df['windspeed'] = pd.to_numeric(df['windspeed'])
+        top_limit = df['windspeed'].max()
+        
+        #This trace is por adding the wind direction
+        fig.add_trace(go.Scatter(
+                    x=df['time'],
+                    y=[float(top_limit) + 1] * len(df), # Displays the wind dir at the top of the graph
+                    mode='markers',
+                    showlegend=False,
+                    line=dict(color='blue'),
+                    marker=dict(
+                        color='blue',
+                        size=10,
+                        symbol='arrow',
+                        angle=df['winddirection']
+                    )), 
+                    row=3, 
+                    col=1)
+        
+        # ------------------------------------
+        # --------- GRAPH - 4 ----------------
+        # ------------------------------------
+        # Displays:
+        #   - precipitation_probability
+        #   - snowfraction
+        #   - sealevelpressure
 
         # Snow Fraction Plot
         fig.add_trace(go.Scatter(x=df['time'], 
@@ -752,12 +800,18 @@ class MeteoBlueDashboard():
 
         self.fig = fig
 
-    def fill_temperature_subplot(self) -> None:
-        '''
-        Fills temperature subplot using the dataframe.
-        TODO: Fix the dataframe changing after using df.update()
+    def subplot_extras(self) -> None:
+        """
+        This function is in charge of plotting 2 extras which are:
+
+        1.- Min and Max for temperature per day
+
+        2.- Plot daylight time across every graph
+
+        Any future extra calculation needed can be added here with no problem.
+
         :rtype: None
-        '''
+        """
 
         df= self.df
         fig = self.fig
@@ -811,43 +865,6 @@ class MeteoBlueDashboard():
                           opacity=0.25, 
                           line_width=0.2)
                 
-
-    def fill_precipitation_subplot(self) -> None:
-        '''
-        Fills the precipitation subplot using the dataframe
-        :rtype: None
-        '''
-        
-        #self.fig.add_hrect(y0=0, 
-        #                   y1=1.2, 
-        #                   row=2, 
-        #                   col=1,                    
-        #                   fillcolor="brown", 
-        #                   opacity=0.65, 
-        #                   line_width=0.2)
-    
-    def fill_wind_subplot(self) -> None:
-        '''
-        Fills the wind subplot using the dataframe
-        :rtype: None
-        '''        
-
-        self.df['windspeed'] = pd.to_numeric(self.df['windspeed'])
-        top_limit = self.df['windspeed'].max()
-        #This trace is por adding the wind direction
-        self.fig.add_trace(go.Scatter(
-                    x=self.df['time'],
-                    y=[float(top_limit) + 1] * len(self.df),
-                    mode='markers',
-                    showlegend=False,
-                    line=dict(color='blue'),
-                    marker=dict(
-                        color='blue',
-                        size=10,
-                        symbol='arrow',
-                        angle=self.df['winddirection']
-        )), row=3, col=1)
-
     def update_layout(self) -> None:
         '''
         Updates the layout of the dashboard it should be used at the end to not 
@@ -878,12 +895,8 @@ class MeteoBlueDashboard():
         self.fig.update_yaxes(title_text="[hPa]",
                          secondary_y=True,                         
                          row=4,
-                         col=1)                         
-        # y-axis text layout
-
-        #self.fig.update_xaxes(range=["2024-02-14 00:00:00", "2024-02-18 00:00:00"])
+                         col=1)
         
-
         self.fig.update_layout(title_text="LCO <br><sup>20.01°S / 70.69°W (2365m asl)</sup>",
                                font_size = 15,
                                height=700,
@@ -898,10 +911,8 @@ class MeteoBlueDashboard():
         :rtype: None
         '''
         
-        self.create_subplots()
-        self.fill_wind_subplot() # For some reason wind subplot must be first ? 
-        self.fill_precipitation_subplot()
-        self.fill_temperature_subplot()
+        self.create_subplots()    
+        self.subplot_extras()
         self.update_layout()
         
         '''

@@ -38,7 +38,7 @@ app.layout = html.Div([
                               style={"backgroundColor": "#FFF0F5"})                                                        
                     ])
 
-# Callback for updating stations plot
+# Callback for updating meteoblue plot
 @app.callback(
                Output('meteoblue_plot', 'figure'), #id of html component
               [Input('days', 'value')]) #id of html component

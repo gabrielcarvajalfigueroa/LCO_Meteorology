@@ -13,11 +13,11 @@ Django, Dash and Ploty. To integrate all of these 3 technologies the project use
 
 <p align="center">
   <a href="#how-it-works">How it works </a> •
-  <a href="#getting-started">Getting Started</a> •
+  <a href="#flow-for-rendering-djangodash">Flow for Rendering DjangoDash</a> •  
   <a href="#installing">Installing </a> •
-  <a href="#satellite-script">Satellite Script </a> •
   <a href="#dash-gif-component">Dash Gif Component </a> •
   <a href="#project-structure">Project Structure </a> •
+  <a href="#getting-started">Getting Started</a> •
   <a href="#built-with">Built with </a> 
 </p>
 
@@ -35,48 +35,85 @@ the django views. For more info in django views check [this](https://docs.django
   <img src="img/lco_meteorology_structure.png" alt="Project structure"/>
 </p>
 
-5. Each dashboard is a class and each plot is a function: The classes are the
+5. Each dashboard is a class and each graph is a function: The classes are the
 followings
 
 <p align="center">
-  <img src="img/lco_meteorology_classes.png" alt="Classes"/>
+  <img src="img/classes.drawio.png" alt="Classes"/>
 </p>
 
-## Getting Started
+## Flow for Rendering DjangoDash
 
-First you will need to create a python virtual enviroment and then install 
-the requirements.txt to finally start the project in your local machine
+<p align="center">
+  <img src="img/flow_lcowebDash.png" alt="FlowForRenderingDjangoDash"/>
+</p>
 
-### Prerequisites
+### Classes
 
-The main libraries of this project are:
-- django_plotly_dash
-- dash
-- plotly
+The previous classes that were showed both exist in the `dashboards_components.py` and both have the logic
+to render their respective plot
 
- ``` bash
-# First create virtual enviroment
-$ python3 -m venv venv
+### DjangoDashApps
 
-# Second activate the virtual enviroment (Ubuntu)
-$ source venv/bin/activate
+The class is instantiated in a callback and then is passed via output to the `dcc.Graph` which is a component
+that can receive a plotly figure for rendering it
+``` python
+# Callback for updating meteoblue plot
+@app.callback(
+               Output('meteoblue_plot', 'figure'), #id of html component
+              [Input('days', 'value')]) #id of html component
+              
+def update_value(*args,**kwargs):
+    """
+    This function returns Meteoblue figure according to the days selected
+    the first time renders with 4 days
+    Input: days selected
+    Output: Meteoblue Figure Object
+    """
+    # args[0] = 1 days
+    # args[0][:1] = 1
 
-# Install the requirements in the virtual enviroment
-$ python3 install -r requirements.txt
+    df = MeteoBlueDashboard(args[0][:1])
+    
+    df.generate_dash()
+
+    return df.fig
+``` 
+### HTML
+
+Renders the django dash app:
+
+``` html
+<!-- Renders plotly app with Meteoblue data-->
+<!-- It's neccesary to add the the container_iframe to 
+    ensure that the plotly app will fully display-->
+{% load plotly_dash %}
+<div id="container_iframe">
+    {% plotly_app name="Meteoblue" %}
+</div>
+
+<style>
+    #container_iframe div{
+        height: 780px!important  ;
+    }
+</style>
 ```
 
-### Installing
+### DjangoView
 
-After you have all the libraries installed you can start the project in your 
-local machine.
+Sends the html to the end user via HttpResponse:
 
-``` bash
-# First go to the django project folder
-$ cd ./meteorologyProject
+``` python
+# ----------------- View for Vaisala Dashboard ------------------------ #
+def dashboards(request):
 
-# Second start the local server
-$ python3 manage.py runserver
+    template = loader.get_template("index.html")    
+
+    context = {'data' : ''}
+    
+    return HttpResponse(template.render(context, request))
 ```
+
 
 ## Dash Gif Component
 
@@ -93,6 +130,28 @@ html.Div([
           height = 340,                                
           width = 340
 )], style={'grid-column-start': '2', 'grid-row-start': '3', 'margin-left': 'auto', 'margin-right': 'auto'}),
+```
+
+To use this package do:
+```
+(venv) $ pip install gif-player
+```
+
+And do not forget to reference it in your `settings.py`:
+
+```
+. . .
+
+#Add PLOTLY_COMPONENTS
+PLOTLY_COMPONENTS = [
+    'dash_core_components',
+    'dash_html_components',
+    'dash_renderer',
+    'dpd_components',
+    'dpd_static_support',
+    'gif_player'] <---- Here you include it
+
+. . .
 ```
 
 [This component](https://github.com/mbkupfer/dash-gif-component) was not created by me, but I had to add the `id` attribute otherwise you can not call it in a 
@@ -140,6 +199,42 @@ If you want to check more about the changes I made to the component here: [Dash-
 │       ├── urls.py
 │       └── wsgi.py
 └── requirements.txt
+```
+
+## Getting Started
+
+First you will need to create a python virtual enviroment and then install 
+the requirements.txt to finally start the project in your local machine
+
+### Prerequisites
+
+The main libraries of this project are:
+- django_plotly_dash
+- dash
+- plotly
+
+ ``` bash
+# First create virtual enviroment
+$ python3 -m venv venv
+
+# Second activate the virtual enviroment (Ubuntu)
+$ source venv/bin/activate
+
+# Install the requirements in the virtual enviroment
+$ python3 install -r requirements.txt
+```
+
+### Installing
+
+After you have all the libraries installed you can start the project in your 
+local machine.
+
+``` bash
+# First go to the django project folder
+$ cd ./meteorologyProject
+
+# Second start the local server
+$ python3 manage.py runserver
 ```
 
 ## Built With
