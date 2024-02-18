@@ -100,7 +100,7 @@ class VaisalaDashBoard():
         TWL_Horizon:-18
         Pressure:760
         '''
-        now = datetime.now() 
+        now = datetime.now()
 
         LCO = ephem.Observer()
         LCO.lat = "-29.0110777"
@@ -109,7 +109,7 @@ class VaisalaDashBoard():
         LCO.horizon = "-1.4"
         LCO.pressure = float("760")
         
-        if int(now.strftime("%H")) >= 13:
+        if int(now.strftime("%H")) >= 16:
             LCO.date = datetime.now()  
         else:
             LCO.date = datetime.now() - timedelta(days=1)
@@ -122,11 +122,6 @@ class VaisalaDashBoard():
         twibeg = ephem.localtime(LCO.next_rising(sun))
         twiend = ephem.localtime(LCO.next_setting(sun))            
 
-        print("sunset", sunset)
-        print("twiend", twiend)
-        print("twibeg", twibeg)
-        print("sunrise", sunrise) 
-
         # -----------------------------------------------------
         # Ephem string calculation: Do we plot old data or next?
         # -----------------------------------------------------
@@ -135,8 +130,8 @@ class VaisalaDashBoard():
         isTwi = False
 
         if sunset > now:
-            isDay = True
-            sunset = sunset - timedelta(days=1)
+            isDay = True        
+            sunset = sunset - timedelta(days=1)    
 
         if sunrise > now:
             sunrise = sunrise - timedelta(days=1)
@@ -148,38 +143,26 @@ class VaisalaDashBoard():
         
         if twiend > now:
             isDay = False
-            isTwi = True
+            #isTwi = True
             twiend = twiend - timedelta(days=1)
 
-        print("isDay", isDay)
-        print("isTwi", isTwi)
-
-
-        if not isDay:
+        if isDay:
             sun_event = sunset.strftime('%H:%M')
             twi_event = twiend.strftime('%H:%M')
-            print("if1")
+
         else:
             if isTwi:
                 sun_event = sunrise.strftime('%H:%M')
                 twi_event = twiend.strftime('%H:%M')
-                print("if2")
+
             else:
                 sun_event = sunrise.strftime('%H:%M')
                 twi_event = twibeg.strftime('%H:%M')
-                print("if3")
 
         sunrise_str = sunrise.strftime('%Y-%m-%d %H:%M:%S')
         sunset_str = sunset.strftime('%Y-%m-%d %H:%M:%S')
         twibeg_str = twibeg.strftime('%Y-%m-%d %H:%M:%S')
-        twiend_str = twiend.strftime('%Y-%m-%d %H:%M:%S')    
-
-        print("now", now)
-        print(twiend > now)
-        print("sunset", sunset_str)
-        print("twiend", twiend_str)
-        print("twibeg", twibeg_str)
-        print("sunrise", sunrise_str)                    
+        twiend_str = twiend.strftime('%Y-%m-%d %H:%M:%S')                    
         
         return [sunset_str, twiend_str, twibeg_str, sunrise_str, sun_event, twi_event]
 
@@ -586,7 +569,6 @@ class VaisalaDashBoard():
                                 paper_bgcolor = "rgb(223, 223, 223)")
         
     
-
 class MeteoBlueDashboard():
     '''Class for MeteoBlue Dashboard generation'''
 
@@ -594,7 +576,7 @@ class MeteoBlueDashboard():
         '''
         Init instance.
         :rtype: None
-        '''
+        '''        
         m = dataclient.MeteoblueData.parameters(day=False)
 
         data = dataclient.DataService.get(m)

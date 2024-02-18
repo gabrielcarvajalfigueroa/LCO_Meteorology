@@ -1,8 +1,10 @@
-import dash_core_components as dcc
-from dash import html
+from dash import html, dcc
 from dash.dependencies import Input, Output
 from django_plotly_dash import DjangoDash
 from .dashboards_components import MeteoBlueDashboard
+import plotly.graph_objs as go
+
+from datetime import datetime
 
 # Toolbar that comes with the Plotly Graph
 toolbar_config = {"displayModeBar": True,
@@ -24,7 +26,10 @@ days = ["1 day", "3 days", "4 days"]
 app = DjangoDash(name='Meteoblue')
 
 app.layout = html.Div([
-
+                    dcc.ConfirmDialog(
+                        id='confirm-danger',
+                        message='ERROR: Couldnt fetch data for displaying',
+                    ),
                     dcc.Dropdown(
                       id = 'days',
                       options = [{'label': i, 'value': i} for i in days],
@@ -40,7 +45,8 @@ app.layout = html.Div([
 
 # Callback for updating meteoblue plot
 @app.callback(
-               Output('meteoblue_plot', 'figure'), #id of html component
+              [Output('meteoblue_plot', 'figure'),
+               Output('confirm-danger', 'displayed')], #id of html component
               [Input('days', 'value')]) #id of html component
               
 def update_value(*args,**kwargs):
@@ -53,9 +59,16 @@ def update_value(*args,**kwargs):
     # args[0] = 1 days
     # args[0][:1] = 1
 
-    df = MeteoBlueDashboard(args[0][:1])
-    
-    df.generate_dash()
+    try:      
+      df = MeteoBlueDashboard(args[0][:1])
 
-    return df.fig
+      df.generate_dash()
+
+      display_error = False
+
+      return df.fig, display_error
+    except:
+       display_error = True
+
+       return go.Figure(), display_error
 

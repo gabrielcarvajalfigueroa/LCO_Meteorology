@@ -1,5 +1,4 @@
-import dash_core_components as dcc
-from dash import html
+from dash import html, dcc
 from dash.dependencies import Input, Output
 from django_plotly_dash import DjangoDash
 from datetime import datetime, timedelta

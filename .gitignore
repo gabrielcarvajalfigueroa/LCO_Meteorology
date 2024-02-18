@@ -15,7 +15,6 @@ new_venv/
 logs.log
 
 # static files
-static/
 
 staticfiles/
 

@@ -1,9 +1,9 @@
-import dash_core_components as dcc
-from dash import html
+from dash import html, dcc
 from dash.dependencies import Input, Output
 from django_plotly_dash import DjangoDash
 from datetime import datetime, timedelta
 from .dashboards_components import VaisalaDashBoard
+import plotly.graph_objs as go
 
 import gif_player as gif
 
@@ -27,6 +27,10 @@ toolbar_config = {"displayModeBar": True,
 app = DjangoDash(name='Subplots')
 
 app.layout = html.Div([
+                    dcc.ConfirmDialog(
+                        id='confirm-danger',
+                        message='ERROR: Couldnt fetch data for displaying',
+                    ),
 
                     #Add dropdown for option selection
                     dcc.Dropdown(
@@ -95,7 +99,8 @@ app.layout = html.Div([
 @app.callback(
                [Output('station_plot', 'figure'),
                 Output('scattergl_plot', 'figure'),
-                Output('seeing_plot', 'figure')], #id of html component
+                Output('seeing_plot', 'figure'),
+                Output('confirm-danger', 'displayed')], #id of html component
               [Input('station', 'value'), Input('interval-component-update', 'n_intervals')]) #id of html component
               
 def update_value(*args,**kwargs):
@@ -104,16 +109,24 @@ def update_value(*args,**kwargs):
     Input: Value specified
     Output: Figure object
     """
+    try:
+        df = VaisalaDashBoard(args[0])
+        
+        df.generate_stations_plot()
 
-    df = VaisalaDashBoard(args[0])
+        df.generate_scattergl_plot()
+
+        df.generate_seeing_plot()
+
+        display_error = False
+
+        return df.fig, df.fig_scattergl, df.fig_seeing, display_error
     
-    df.generate_stations_plot()
+    except:
+        display_error = True
 
-    df.generate_scattergl_plot()
-
-    df.generate_seeing_plot()
-
-    return df.fig, df.fig_scattergl, df.fig_seeing
+        return go.Figure(), go.Figure(), go.Figure(), display_error
+    
 
 
 # Callback for downloading csv 
@@ -129,8 +142,7 @@ def func(*args,**kwargs):
     is clicked, without this function the code downloads the csv when changing
     the dropdown or when the button is clicked because of how dash app callback 
     inputs works.
-    """
-    
+    """    
     
     # In Django_plotly_dash is necessary to use kwargs otherwise it wont work
     # For more info check:
