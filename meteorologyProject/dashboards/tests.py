@@ -18,6 +18,7 @@ as a test.
 - Your methods MUST start with test in order to be recognized as a test.
 
 After your tests are done run:
+$ python3 manage.py test dashboards
 -------------------------------------
 '''
 
@@ -34,7 +35,7 @@ class VaisalaTestCase(TestCase):
     def test_vaisala_generation_time(self):    
 
         print("-" * 40)
-        print(" TESTING VAISALA GENERATION TIME ")
+        print(" TESTING:    VAISALA GENERATION TIME ")
         print("-" * 40)
 
         start = datetime.now()
@@ -64,7 +65,7 @@ class MeteoBlueTestCase(TestCase):
     def test_meteoblue_generation_time(self):
 
         print("-" * 40)
-        print(" TESTING METEOBLUE GENERATION TIME ")
+        print(" TESTING:    METEOBLUE GENERATION TIME ")
         print("-" * 40)
         start = datetime.now()
 
@@ -92,7 +93,7 @@ class ViewsRenderingTestCase(TestCase):
 
     def test_stations_view(self):
         print("-" * 40)
-        print(" TESTING STATIONS VIEW STATUS CODE ")
+        print(" TESTING:    STATIONS VIEW STATUS CODE ")
         print("-" * 40)
 
         response = self.client.get(reverse("vaisala"))
@@ -100,7 +101,7 @@ class ViewsRenderingTestCase(TestCase):
 
     def test_meteoblue_view(self):
         print("-" * 40)
-        print(" TESTING METEOBLUE VIEW STATUS CODE ")
+        print(" TESTING:    METEOBLUE VIEW STATUS CODE ")
         print("-" * 40)
 
         response = self.client.get(reverse("meteoblue"))
@@ -108,7 +109,7 @@ class ViewsRenderingTestCase(TestCase):
 
     def test_otherResources_view(self):
         print("-" * 40)
-        print(" TESTING OTHER RESOURCES VIEW STATUS CODE ")
+        print(" TESTING:    OTHER RESOURCES VIEW STATUS CODE ")
         print("-" * 40)
 
         response = self.client.get(reverse("otherResources"))
@@ -116,7 +117,7 @@ class ViewsRenderingTestCase(TestCase):
 
     def test_webcams_view(self):
         print("-" * 40)
-        print(" TESTING WEBCAMS VIEW STATUS CODE ")
+        print(" TESTING:    WEBCAMS VIEW STATUS CODE ")
         print("-" * 40)
 
         response = self.client.get(reverse("webcams"))
@@ -124,7 +125,7 @@ class ViewsRenderingTestCase(TestCase):
     
     def test_history_view(self):
         print("-" * 40)
-        print(" TESTING HISTORY VIEW STATUS CODE ")
+        print(" TESTING:    HISTORY VIEW STATUS CODE ")
         print("-" * 40)
 
         response = self.client.get(reverse("history"))
@@ -132,7 +133,7 @@ class ViewsRenderingTestCase(TestCase):
 
     def test_allskycamera_view(self):
         print("-" * 40)
-        print(" TESTING ALLSKYCAMERA VIEW STATUS CODE ")
+        print(" TESTING:    ALLSKYCAMERA VIEW STATUS CODE ")
         print("-" * 40)
 
         response = self.client.get(reverse("allskycamera"))
@@ -140,7 +141,7 @@ class ViewsRenderingTestCase(TestCase):
 
     def test_nightlyskymovie_view(self):
         print("-" * 40)
-        print(" TESTING NIGHTLYSKYMOVIE VIEW STATUS CODE ")
+        print(" TESTING:    NIGHTLYSKYMOVIE VIEW STATUS CODE ")
         print("-" * 40)
 
         response = self.client.get(reverse("nightlyskymovie"))

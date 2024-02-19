@@ -96,7 +96,7 @@ def update_value(*args,**kwargs):
     # It's neccesary to update min and max dates otherwise it gets stucks with the
     # initial dates.
     min_date_allowed = datetime.now() - timedelta(days=14)
-    max_date_allowed = datetime.now() - timedelta(days=1)
+    max_date_allowed = datetime.now() - timedelta(days=2)
 
     # Uses ctx to check if it is the first time the callback is displayed
     # This is useful to display the data from the day before when the page is called.
