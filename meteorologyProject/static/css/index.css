@@ -1,0 +1,113 @@
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+}
+
+#topdiv {
+	background: url('bg-header.jpg') repeat-x;
+	min-height: 150px;
+	min-width: 1830px;
+	margin-bottom: 5px;
+}
+
+#wframe {
+	min-height: 800px;
+	min-width: 1830px;
+	border: none;
+	overflow: auto;
+}
+
+#hdrimg {
+	float: left;
+}
+
+#hdrblk {
+	display: inline-block;
+	margin: 1.5em 0 0 0;
+}
+
+.header { 
+	margin: 0;
+	padding: 0;
+	font-family: sans-serif; 
+	font-weight: normal; 
+	text-decoration: none; 
+	color: white;
+}
+
+#header {
+	padding: 0 0 0 8px;
+}
+
+/* The color controls for the navigation links */
+.menuBar { color: white; }
+.subMenu { color: MediumBlue; }
+.mActive { color: black; }
+
+/* Styles for the CASCA and webcam links */
+.imglinkr { border: 5px solid red; }
+.imglinkr:hover { border: 5px solid black; }
+.imglinkb { border: 5px solid blue; }
+.imglinkb:hover { border: 5px solid black; }
+
+/* This is all borrowed from http://codepen.io/philhoyt/pen/ujHzd */
+#primary_nav_wrap {
+	margin: 0;
+	padding: 0;
+	font-family: sans-serif;
+}
+
+#primary_nav_wrap ul {
+	margin: 0;
+	padding: 0;
+	position: relative;
+	float: left;
+	list-style: none;
+}
+
+#primary_nav_wrap ul a {
+	display: block;
+	padding: 0 8px;
+	font-weight: normal;
+	font-size: 1.2em;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+#primary_nav_wrap ul li {
+	position: relative;
+	float: left;
+	margin: 0;
+	padding: 3px 0;
+}
+
+#primary_nav_wrap ul li:hover {
+	background: white;
+}
+
+#primary_nav_wrap ul ul {
+	display: none;
+	position: absolute;
+	top: 100%;
+	left: 0;
+	background: white;
+	padding: 0;
+}
+
+#primary_nav_wrap ul ul li {
+	float:none;
+}
+
+#primary_nav_wrap ul ul a {
+	padding: 1px 12px;
+	font-size: 1.0em;
+}
+
+#primary_nav_wrap ul li:hover > ul {
+	display:block;
+}
+
+#primary_nav_wrap ul li:hover > a {
+	color: black;
+}

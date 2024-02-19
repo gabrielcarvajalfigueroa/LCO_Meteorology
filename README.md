@@ -165,7 +165,6 @@ If you want to check more about the changes I made to the component here: [Dash-
 ├── img                                   # Folder that contains imgs for README
 │   
 ├── meteorologyProject                    # Django Project
-│   ├── celerybeat-schedule
 |   │   ├── dashboards                    # Django App
 │   │   ├── Dash_Apps
 │   │   │   ├── dashboards_components.py  # Contains classes for rendering plots

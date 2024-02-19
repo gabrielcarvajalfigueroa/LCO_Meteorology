@@ -100,7 +100,7 @@ class VaisalaDashBoard():
         TWL_Horizon:-18
         Pressure:760
         '''
-        now = datetime.now() 
+        now = datetime.now()
 
         LCO = ephem.Observer()
         LCO.lat = "-29.0110777"
@@ -109,7 +109,7 @@ class VaisalaDashBoard():
         LCO.horizon = "-1.4"
         LCO.pressure = float("760")
         
-        if int(now.strftime("%H")) >= 13:
+        if int(now.strftime("%H")) >= 16:
             LCO.date = datetime.now()  
         else:
             LCO.date = datetime.now() - timedelta(days=1)
@@ -122,11 +122,6 @@ class VaisalaDashBoard():
         twibeg = ephem.localtime(LCO.next_rising(sun))
         twiend = ephem.localtime(LCO.next_setting(sun))            
 
-        print("sunset", sunset)
-        print("twiend", twiend)
-        print("twibeg", twibeg)
-        print("sunrise", sunrise) 
-
         # -----------------------------------------------------
         # Ephem string calculation: Do we plot old data or next?
         # -----------------------------------------------------
@@ -135,8 +130,8 @@ class VaisalaDashBoard():
         isTwi = False
 
         if sunset > now:
-            isDay = True
-            sunset = sunset - timedelta(days=1)
+            isDay = True        
+            sunset = sunset - timedelta(days=1)    
 
         if sunrise > now:
             sunrise = sunrise - timedelta(days=1)
@@ -148,38 +143,26 @@ class VaisalaDashBoard():
         
         if twiend > now:
             isDay = False
-            isTwi = True
+            #isTwi = True
             twiend = twiend - timedelta(days=1)
 
-        print("isDay", isDay)
-        print("isTwi", isTwi)
-
-
-        if not isDay:
+        if isDay:
             sun_event = sunset.strftime('%H:%M')
             twi_event = twiend.strftime('%H:%M')
-            print("if1")
+
         else:
             if isTwi:
                 sun_event = sunrise.strftime('%H:%M')
                 twi_event = twiend.strftime('%H:%M')
-                print("if2")
+
             else:
                 sun_event = sunrise.strftime('%H:%M')
                 twi_event = twibeg.strftime('%H:%M')
-                print("if3")
 
         sunrise_str = sunrise.strftime('%Y-%m-%d %H:%M:%S')
         sunset_str = sunset.strftime('%Y-%m-%d %H:%M:%S')
         twibeg_str = twibeg.strftime('%Y-%m-%d %H:%M:%S')
-        twiend_str = twiend.strftime('%Y-%m-%d %H:%M:%S')    
-
-        print("now", now)
-        print(twiend > now)
-        print("sunset", sunset_str)
-        print("twiend", twiend_str)
-        print("twibeg", twibeg_str)
-        print("sunrise", sunrise_str)                    
+        twiend_str = twiend.strftime('%Y-%m-%d %H:%M:%S')                    
         
         return [sunset_str, twiend_str, twibeg_str, sunrise_str, sun_event, twi_event]
 
@@ -196,7 +179,7 @@ class VaisalaDashBoard():
 
         self.fig_seeing.update_layout(showlegend=False, 
                                       height=200,
-                                      margin=dict(t=35),
+                                      margin=dict(l=5, r=55, t=20, b=1),
                                       paper_bgcolor = "rgb(223, 223, 223)")
 
     def generate_stations_plot(self) -> None:
@@ -444,7 +427,7 @@ class VaisalaDashBoard():
                         line_color="lightblue")
             
             # Annotation for Sun event and Twilight
-            self.fig.add_annotation(dict(x=0.99, y=0.3, ax=5, ay=0,
+            self.fig.add_annotation(dict(x=0.98, y=0.3, ax=5, ay=0,
                                 xref = "paper", 
                                 yref = "paper", 
                                 text= f'Sun Event: {ephems[4]} - Twilight: {ephems[5]}'), 
@@ -514,7 +497,7 @@ class VaisalaDashBoard():
         # Updates layout for stations figure
         self.fig.update_layout( font_size = 10, 
                                 height=500,
-                                margin=dict(l=20, r=20, t=20, b=20),
+                                margin=dict(l=5, r=5, t=1, b=1),
                                 autotypenumbers='convert types',
                                 showlegend = False,                                
                                 paper_bgcolor = "rgb(223, 223, 223)")
@@ -586,7 +569,6 @@ class VaisalaDashBoard():
                                 paper_bgcolor = "rgb(223, 223, 223)")
         
     
-
 class MeteoBlueDashboard():
     '''Class for MeteoBlue Dashboard generation'''
 
@@ -594,7 +576,7 @@ class MeteoBlueDashboard():
         '''
         Init instance.
         :rtype: None
-        '''
+        '''        
         m = dataclient.MeteoblueData.parameters(day=False)
 
         data = dataclient.DataService.get(m)
