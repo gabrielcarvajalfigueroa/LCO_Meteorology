@@ -71,4 +71,3 @@ def update_value(*args,**kwargs):
        display_error = True
 
        return go.Figure(), display_error
-

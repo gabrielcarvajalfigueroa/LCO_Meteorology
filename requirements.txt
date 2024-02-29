@@ -6,7 +6,6 @@ async-timeout==4.0.3
 attrs==23.2.0
 billiard==4.2.0
 blinker==1.7.0
-celery==5.3.6
 channels==4.0.0
 click==8.1.7
 click-didyoumean==0.3.0
@@ -20,8 +19,7 @@ dash-html-components==2.0.0
 dash-renderer==1.9.1
 dash-table==5.0.0
 Django==4.2.9
-django-celery-beat==2.5.0
-django-celery-results==2.5.1
+django-environ==0.11.2
 django-plotly-dash==2.2.2
 django-timezone-field==6.1.0
 dpd-components==0.1.0
@@ -29,12 +27,14 @@ dpd-static-support==0.0.5
 ephem==4.1.5
 Flask==3.0.1
 frozenlist==1.4.1
-gif-player==0.0.1
+gif_player==0.0.5
+gunicorn==21.2.0
 idna==3.6
 itsdangerous==2.1.2
 Jinja2==3.1.3
 kombu==5.3.5
-lcodataclient==1.1.0
+# You have to manually install this package
+#lcodataclient==1.1.0
 MarkupSafe==2.1.4
 multidict==6.0.4
 nest-asyncio==1.6.0

@@ -30,45 +30,35 @@ class VaisalaDashBoard():
         self.fig_scattergl = None
         self.history_start = history_start #This attribute is used to check the live or history display
 
+        vaisala_data = None
+
         if history_start == None:
 
             now = datetime.now() - timedelta(days=1)
 
             now_string = now.strftime("%Y-%m-%d %H:%M:%S")
-            v = dataclient.VaisalaData.parameters(station = station,
+
+            vaisala_data = dataclient.VaisalaData.parameters(station = station,
                                                 start_ts = now_string,  
-                                                limit = '1440')
+                                                limit = '1440')                  
 
-            data = dataclient.DataService.get(v)
-
-            data['time'] = data.index
-
-            # Converts pressure from inHg to mb
-            data['air_pressure'] = data['air_pressure'] * 33.864
-
-            # Sorts the data by the timestamp which is the index
-            data.sort_index(inplace=True)
-            
-            self.df = data        
-
-        else:
-            
-            v = dataclient.VaisalaData.parameters(station = station,
+        else:    
+            vaisala_data = dataclient.VaisalaData.parameters(station = station,
                                                 start_ts = history_start,  
                                                 end_ts = history_end,
                                                 limit = '1440')
 
-            data = dataclient.DataService.get(v)
+        data = dataclient.DataService.get(vaisala_data)
 
-            data['time'] = data.index
+        data['time'] = data.index
 
-            # Converts pressure from inHg to mb
-            data['air_pressure'] = data['air_pressure'] * 33.864
+        # Converts pressure from inHg to mb
+        data['air_pressure'] = data['air_pressure'] * 33.864
 
-            # Sorts the data by the timestamp which is the index
-            data.sort_index(inplace=True)
+        # Sorts the data by the timestamp which is the index
+        data.sort_index(inplace=True)
 
-            self.df = data            
+        self.df = data            
             
     def get_ephems(self) -> list:
         '''
@@ -186,9 +176,10 @@ class VaisalaDashBoard():
         df = self.df
 
         # DewPoint column calculation 
-        # trh = (((17.27 * df['temperature'])/(273.7 + df['temperature'])) + ln(0.01 * df['relative_humidity']))
-        # dewpoint = (237.7*trh)/(17.27-trh)
-        df['dp'] = (237.7*(((17.27 * df['temperature'])/(273.7 + df['temperature'])) + ln(0.01 * df['relative_humidity'])))/(17.27-(((17.27 * df['temperature'])/(273.7 + df['temperature'])) + ln(0.01 * df['relative_humidity'])))                
+        #df['dp'] = (237.7*(((17.27 * df['temperature'])/(273.7 + df['temperature'])) + ln(0.01 * df['relative_humidity'])))/(17.27-(((17.27 * df['temperature'])/(273.7 + df['temperature'])) + ln(0.01 * df['relative_humidity'])))                
+
+        df['trh'] = (((17.27 * df['temperature'])/(273.7 + df['temperature'])) + ln(0.01 * df['relative_humidity']))
+        df['dp'] = (237.7*df['trh'])/(17.27-df['trh'])
 
         self.fig = make_subplots(rows=3, 
                                  cols=1,
@@ -292,7 +283,7 @@ class VaisalaDashBoard():
                          col=1)
 
         self.fig.update_yaxes(title_text="Wind[Mph]",
-                         range=[0, 60],
+                         range=[0, 100],
                          row=2,
                          col=1)
         
@@ -825,8 +816,9 @@ class MeteoBlueDashboard():
         dates = df.index.tolist()
         isdaylight = df['isdaylight'].tolist()
 
+        array_length = len(dates)
         # O(n)
-        for i in range(len(dates)):
+        for i in range(array_length):
             # if daylight is 1 can be used as True
             if isdaylight[i]:
                 # if the 0 is at the previous index means that is a start point
@@ -835,6 +827,19 @@ class MeteoBlueDashboard():
 
                 # if the 0 is at the next index means that is an end point
                 # and that both points have to be plotted
+                if i == array_length-1 and isdaylight:
+                    end_daylight = dates[i]
+                    fig.add_vrect(x0=start_daylight, 
+                          x1=end_daylight, 
+                          row="all", 
+                          col=1,
+                          annotation_text="", 
+                          annotation_position="top left",
+                          fillcolor="yellow", 
+                          opacity=0.25, 
+                          line_width=0.2)    
+                    break
+
                 if isdaylight[i+1] == 0:
                     end_daylight = dates[i]
                     fig.add_vrect(x0=start_daylight, 
