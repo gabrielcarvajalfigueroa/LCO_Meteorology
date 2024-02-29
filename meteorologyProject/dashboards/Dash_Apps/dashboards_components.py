@@ -156,6 +156,7 @@ class VaisalaDashBoard():
         
         return [sunset_str, twiend_str, twibeg_str, sunrise_str, sun_event, twi_event]
 
+    # TODO: Implement Dimm data to the graph.
     def generate_seeing_plot(self) -> None:
         df = self.df
 
