@@ -7,15 +7,35 @@
     <div style="grid-row-start: 1; grid-column-start: 1;">
         <p style="text-align: center;">Blue Filter</p>                
 
-        <img src="https://clima.lco.cl/casca/latestblue.png?861874" width="50%" style="float:left; margin-right:5px">
-        <img src="https://clima.lco.cl/casca/blueanim.gif?8520246" style="margin-left: auto; margin-right: auto; display: block;">
+        <img id="bluefilter_png" src={{bluefilter_png}} width="50%" style="float:left; margin-right:5px">
+        <img id="bluefilter_gif" src={{bluefilter_gif}} style="margin-left: auto; margin-right: auto; display: block;">
     </div>
 
     <div style="grid-row-start: 1; grid-column-start: 2;">
         <p style="text-align: center;">Red Filter</p>
         
-        <img src="https://clima.lco.cl/casca/latestred.png?8396489" width="50%"  style="float:left; margin-right:5px; display: block;">
-        <img src="https://clima.lco.cl/casca/redanim.gif?1553784" style="margin-left: auto; margin-right: auto; display: block;">
+        <img id="redfilter_png" src={{redfilter_png}} width="50%"  style="float:left; margin-right:5px; display: block;">
+        <img id="redfilter_gif" src={{redfilter_gif}} style="margin-left: auto; margin-right: auto; display: block;">
     </div>
 
 </div>
+
+<script>
+    function autoRefresh() {
+        //window.location = window.location.href;
+        // Blue
+        var bluePng = document.getElementById('bluefilter_png');
+        var blueGif = document.getElementById('bluefilter_gif');
+
+        bluePng.src = '{{bluefilter_png}}?' + Math.floor(Math.random() * 10000);
+        blueGif.src = '{{bluefilter_gif}}?' + Math.floor(Math.random() * 10000);
+
+        // Red
+        var redPng = document.getElementById('redfilter_png');
+        var redGif = document.getElementById('redfilter_gif');
+        
+        redPng.src = '{{redfilter_png}}?' + Math.floor(Math.random() * 10000);
+        redGif.src = '{{redfilter_gif}}?' + Math.floor(Math.random() * 10000);
+    }
+    setInterval('autoRefresh()', 120000);
+</script>

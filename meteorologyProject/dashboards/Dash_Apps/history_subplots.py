@@ -3,6 +3,7 @@ from dash.dependencies import Input, Output
 from django_plotly_dash import DjangoDash
 from datetime import datetime, timedelta
 from .dashboards_components import VaisalaDashBoard
+import plotly.graph_objs as go
 
 # Stations to Display
 stations = ["Magellan", "DuPont", "C40"]
@@ -24,6 +25,10 @@ toolbar_config = {"displayModeBar": True,
 app = DjangoDash(name='History', serve_locally=True)
 
 app.layout = html.Div([
+                            dcc.ConfirmDialog(
+                                id='confirm-danger',
+                                message='ERROR: Couldnt fetch data for displaying',
+                            ),
                             #Add dropdown for option selection
                             dcc.Dropdown(
                             id = 'station',
@@ -78,7 +83,8 @@ app.layout = html.Div([
                 Output('scattergl_plot', 'figure'),
                 Output('seeing_plot', 'figure'),
                 Output('history-date-picker', 'min_date_allowed'),
-                Output('history-date-picker', 'max_date_allowed')], #id of html component
+                Output('history-date-picker', 'max_date_allowed'),
+                Output('confirm-danger', 'displayed')], #id of html component
               [Input('station', 'value'), Input('history-date-picker', 'date')],
               prevent_initial_call=False) #id of html component
               
@@ -93,61 +99,73 @@ def update_value(*args,**kwargs):
     # args[0]: station value eg. Magellan
     # args[1]: date selected eg. 2024-02-01 -> str        
 
-    # It's neccesary to update min and max dates otherwise it gets stucks with the
-    # initial dates.
-    min_date_allowed = datetime.now() - timedelta(days=14)
-    max_date_allowed = datetime.now() - timedelta(days=2)
+    try:
+        # It's neccesary to update min and max dates otherwise it gets stucks with the
+        # initial dates.
+        min_date_allowed = datetime.now() - timedelta(days=14)
+        max_date_allowed = datetime.now() - timedelta(days=2)
 
-    # Uses ctx to check if it is the first time the callback is displayed
-    # This is useful to display the data from the day before when the page is called.
-    ctx = kwargs['callback_context']
-    
-    # Conditionals explanation
-    # len(ctx.triggered) --> To check if it was the initial call when rendering the page or not
-    # args[1] -------------> This is in case the user changes a station without selecting a date
-
-    if len(ctx.triggered) != 0 and args[1] != None:
-
-        start_ts = datetime.strptime(args[1] + " 00:00:00", '%Y-%m-%d %H:%M:%S')
-
-        end_ts = start_ts + timedelta(days=1)
-
-        start_ts = start_ts.strftime("%Y-%m-%d %H:%M:%S")
-        end_ts = end_ts.strftime("%Y-%m-%d %H:%M:%S")
-
-        df = VaisalaDashBoard(args[0], start_ts, end_ts)
+        # Uses ctx to check if it is the first time the callback is displayed
+        # This is useful to display the data from the day before when the page is called.
+        ctx = kwargs['callback_context']
         
-        df.generate_stations_plot()
+        # Conditionals explanation
+        # len(ctx.triggered) --> To check if it was the initial call when rendering the page or not
+        # args[1] -------------> This is in case the user changes a station without selecting a date
 
-        df.generate_scattergl_plot()
+        if len(ctx.triggered) != 0 and args[1] != None:
 
-        df.generate_seeing_plot()
-        
-        return df.fig, df.fig_scattergl, df.fig_seeing, min_date_allowed, max_date_allowed
+            start_ts = datetime.strptime(args[1] + " 00:00:00", '%Y-%m-%d %H:%M:%S')
 
-    else:
+            end_ts = start_ts + timedelta(days=1)
 
-        # This is the logic to display the first data whichs is the one
-        # from the day before.
+            start_ts = start_ts.strftime("%Y-%m-%d %H:%M:%S")
+            end_ts = end_ts.strftime("%Y-%m-%d %H:%M:%S")
 
-        now = datetime.now() - timedelta(days=1)
+            df = VaisalaDashBoard(args[0], start_ts, end_ts)
+            
+            df.generate_stations_plot()
 
-        start_ts = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            df.generate_scattergl_plot()
 
-        end_ts = start_ts + timedelta(days=1)
+            df.generate_seeing_plot()
 
-        start_ts = start_ts.strftime("%Y-%m-%d %H:%M:%S")
-        end_ts = end_ts.strftime("%Y-%m-%d %H:%M:%S")        
+            display_error = False
+            
+            return df.fig, df.fig_scattergl, df.fig_seeing, min_date_allowed, max_date_allowed, display_error
 
-        df = VaisalaDashBoard(args[0], start_ts, end_ts)
-        
-        df.generate_stations_plot()
+        else:
 
-        df.generate_scattergl_plot()
+            # This is the logic to display the first data whichs is the one
+            # from the day before.
 
-        df.generate_seeing_plot()
-        
-        return df.fig, df.fig_scattergl, df.fig_seeing, min_date_allowed, max_date_allowed
+            now = datetime.now() - timedelta(days=1)
+
+            start_ts = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+            end_ts = start_ts + timedelta(days=1)
+
+            start_ts = start_ts.strftime("%Y-%m-%d %H:%M:%S")
+            end_ts = end_ts.strftime("%Y-%m-%d %H:%M:%S")        
+
+            df = VaisalaDashBoard(args[0], start_ts, end_ts)
+            
+            df.generate_stations_plot()
+
+            df.generate_scattergl_plot()
+
+            df.generate_seeing_plot()
+
+            display_error = False
+            
+            return df.fig, df.fig_scattergl, df.fig_seeing, min_date_allowed, max_date_allowed, display_error
+    except:
+        min_date_allowed = datetime.now() - timedelta(days=14)
+        max_date_allowed = datetime.now() - timedelta(days=2)
+
+        display_error = True
+
+        return go.Figure(), go.Figure(), go.Figure(), min_date_allowed, max_date_allowed, display_error
 
 
 # Callback for downloading csv 

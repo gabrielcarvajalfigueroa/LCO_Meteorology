@@ -6,6 +6,11 @@ from datetime import datetime
 from .Dash_Apps import meteorology_subplots, meteoblue_subplots, history_subplots
 
 
+import environ
+
+env= environ.Env()
+environ.Env.read_env()
+
 # ----------------- View for Vaisala Dashboard ------------------------ #
 def dashboards(request):
 
@@ -47,7 +52,12 @@ def webcams(request):
 
     template = loader.get_template("webcams.html")
     
-    context = {'data' : ''}
+    context = {'northwebcam_png': env('NORTHWEBCAM_PNG'),
+               'northwebcam_gif': env('NORTHWEBCAM_GIF'),
+               'westwebcam_png': env('WESTWEBCAM_PNG'),
+               'westwebcam_gif': env('WESTWEBCAM_GIF'),
+               'southwebcam_png': env('SOUTHWEBCAM_PNG'),
+               'southwebcam_gif': env('SOUTHWEBCAM_GIF')}
 
     return HttpResponse(template.render(context, request))    
 
@@ -67,7 +77,10 @@ def allskycamera(request):
 
     template = loader.get_template("allskycamera.html")
 
-    context = {'data' : ''}
+    context = {'bluefilter_png': env('BLUEFILTER_PNG'),
+               'bluefilter_gif': env('BLUEFILTER_GIF'),
+               'redfilter_png': env('REDFILTER_PNG'),
+               'redfilter_gif': env('REDFILTER_GIF')}
 
     return HttpResponse(template.render(context, request))     
 
@@ -77,6 +90,6 @@ def nightlyskymovie(request):
 
     template = loader.get_template("nightlyskymovie.html")
 
-    context = {'data' : ''} 
+    context = {'nightlyskymovie' : env('NIGHTLYSKYMOVIE')} 
 
     return HttpResponse(template.render(context, request))
